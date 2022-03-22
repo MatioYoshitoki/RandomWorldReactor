@@ -11,13 +11,12 @@ open class AliveHumanScheduler(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    @Scheduled(fixedDelay = 1_000, initialDelay = 10_000)
+    @Scheduled(fixedDelay = 10_000, initialDelay = 10_000)
     fun doTask() {
         subscriptionRegistry.findHumanByZone(1)
             .forEach {
-                log.info(
+                println(
                     """
-                        
             -------------------------
             |编号 | ${it.id}         
             |名称 | ${it.name}       

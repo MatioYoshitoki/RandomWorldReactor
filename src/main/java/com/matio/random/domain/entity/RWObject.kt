@@ -1,13 +1,17 @@
 package com.matio.random.domain.entity
 
 import com.matio.random.infra.JFunction
+import com.matio.random.infra.config.ApplicationProperties
 import com.matio.random.infra.constants.HumanStatus
 import com.matio.random.infra.utils.SinksUtils
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Sinks
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentMap
 import java.util.function.Consumer
 import java.util.stream.Stream
+import kotlin.reflect.KClass
 
 
 /**
@@ -18,6 +22,7 @@ abstract class RWObject(
     val id: Long,
     val name: String,
     val zoneId: Long,
+    val properties: ApplicationProperties,
     val sound: Sinks.Many<RWEvent>?,
     val taskChannel: Sinks.Many<RWTask>?,
 ) {
@@ -63,6 +68,7 @@ open class Human(
     zoneId: Long,
     var heal: Int = 800 + (Math.random() * 800).toInt(),
     open var atk: Int = 100 + (Math.random() * 200).toInt(),
+    properties: ApplicationProperties,
     sound: Sinks.Many<RWEvent>?,
     taskChannel: Sinks.Many<RWTask>?,
     var earnSpeed: Int = 30,
@@ -70,17 +76,16 @@ open class Human(
     var money: Int = (Math.random() * 200).toInt(),
     private var status: HumanStatus = HumanStatus.ALIVE
 ) : RWObject(
-    id, name, zoneId, sound, taskChannel
+    id, name, zoneId, properties, sound, taskChannel
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
+    private val taskCountDownMap = ConcurrentHashMap<KClass<out RWTask>, Long>()
+
     override fun handlerMsg(event: RWEvent) {
         if (event.source != this) {
             if (event.target == this || event.target == null) {
-//                if (event !is TimeEvent) {
-//                    log.info("${this.name}(${this.id}) receive msg: ${event.msg}")
-//                }
                 when (event) {
                     is TimeEvent -> eventBack(event)
                     is HealEvent -> {
@@ -112,9 +117,9 @@ open class Human(
                         }
                     }
                     is ATKEvent -> {
-                        if (event.target == this) {
+                        if (event.target == this && (event.source as Human).isAlive()) {
                             this.heal -= event.damage
-                            log.info("${this.name} 受到【${event.source!!.name}】攻击, 生命值减少${event.damage}。剩余生命值: ${this.heal}")
+                            log.info("${this.name} 受到【${event.source.name}】攻击, 生命值减少${event.damage}。剩余生命值: ${this.heal}")
                             if (heal <= 0) {
                                 this.destroy()
                             } else {
@@ -129,50 +134,75 @@ open class Human(
 
 
     private fun eventBack(event: RWEvent) {
+        var task = nextTask(event)
+        for (i in 0..10) {
+            if (task == null) {
+                break
+            }
+            if (taskCountDownMap.containsKey(task::class)) {
+                if ((taskCountDownMap[task::class]!! + (properties.countDown[task::class.simpleName]
+                        ?: 0)) < System.currentTimeMillis()
+                ) {
+                    break
+                } else {
+                    task = nextTask(event)
+                }
+            }
+        }
+        if (task != null) {
+            taskCountDownMap[task::class] = System.currentTimeMillis()
+            pushTask(task)
+        }
+    }
+
+    private fun nextTask(event: RWEvent): RWTask? {
         val rate = Math.random()
-        when (event) {
+        return when (event) {
             is ATKEvent -> {
                 if (rate < 0.05) {
-                    pushTask(StayTask(1, this))
-                } else if (rate < 0.2) {
-                    pushTask(EarnTask(1, this, this.earnSpeed))
+                    StayTask(1, this)
+                } else if (rate < 0.5) {
+                    EarnTask(1, this, this.earnSpeed)
                 } else {
-                    pushTask(ATKTask(1, this, event.source as Human))
+                    ATKTask(1, this, event.source as Human)
                 }
             }
             is EarnEvent -> {
                 if (this.money in 200..299) {
                     if (rate < 0.5) {
-                        pushTask(UpgradeToolTask(1, this))
+                        UpgradeToolTask(1, this)
                     } else {
-                        pushTask(EarnTask(1, this, this.earnSpeed))
+                        EarnTask(1, this, this.earnSpeed)
                     }
                 } else if (this.money >= 300) {
                     val healPressure: Float = if (this.heal < 800) 1.5f else 1f
                     if (rate < (0.2f * healPressure)) {
-                        pushTask(HealTask(1, this))
+                        HealTask(1, this)
                     } else if (rate < (0.6 * healPressure)) {
-                        pushTask(UpgradeWeaponTask(1, this))
+                        UpgradeWeaponTask(1, this)
                     } else {
-                        pushTask(EarnTask(1, this, this.earnSpeed))
+                        EarnTask(1, this, this.earnSpeed)
                     }
+                } else {
+                    null
                 }
             }
             else -> {
-                if (rate < 0.1) {
+                if (rate < 0.05) {
                     val target = findAllHumanSameZone().filter { it != this }.findAny()
                     if (target.isPresent) {
-                        pushTask(ATKTask(1, this, target.get()))
+                        ATKTask(1, this, target.get())
+                    } else {
+                        null
                     }
                 } else if (rate < 0.8) {
-                    pushTask(EarnTask(1, this, this.earnSpeed))
+                    EarnTask(1, this, this.earnSpeed)
                 } else {
-                    pushTask(StayTask(1, this))
+                    StayTask(1, this)
                 }
             }
         }
     }
-
 
     private fun findAllHumanSameZone(): Stream<Human> {
         return vision.apply(this.zoneId)

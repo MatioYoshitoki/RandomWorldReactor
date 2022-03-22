@@ -6,6 +6,7 @@ import com.matio.random.infra.utils.SinksUtils
 import org.slf4j.LoggerFactory
 import org.springframework.context.SmartLifecycle
 import org.springframework.stereotype.Component
+import reactor.core.publisher.Mono
 import reactor.core.publisher.Sinks
 import reactor.util.concurrent.Queues
 
@@ -18,7 +19,7 @@ open class TaskHandler : SmartLifecycle {
     private val log = LoggerFactory.getLogger(javaClass)
 
 
-    fun pushTask(task: RWTask) {
+    private fun pushTask(task: RWTask) {
         try {
             SinksUtils.tryEmit(taskHandler, task)
         } catch (e: Exception) {
@@ -28,12 +29,13 @@ open class TaskHandler : SmartLifecycle {
 
     override fun start() {
         running = true
-        taskHandler.asFlux().doOnNext { task ->
-            task.run()
-            if (!task.isFinish()) {
-                pushTask(task)
-            }
-        }.subscribe()
+        taskHandler.asFlux()
+            .doOnNext { task ->
+                Mono.just(task.run()).subscribe()
+                if (!task.isFinish()) {
+                    pushTask(task)
+                }
+            }.subscribe()
     }
 
     override fun stop() {
