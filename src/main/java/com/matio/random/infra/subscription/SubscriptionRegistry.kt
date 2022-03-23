@@ -3,34 +3,34 @@ package com.matio.random.infra.subscription
 import com.matio.random.domain.entity.Human
 import com.matio.random.domain.entity.RWEvent
 import com.matio.random.domain.entity.RWObject
+import com.matio.random.domain.entity.RWZone
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
 import java.util.Optional
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Consumer
 import java.util.stream.Stream
+import kotlin.math.log
 
 @Component
 open class SubscriptionRegistry {
 
+    private val log: Logger = LoggerFactory.getLogger(javaClass)
     private val zoneSubscriptions = ConcurrentHashMap<String, MutableSet<Long>>()
     private val objectHandler = ConcurrentHashMap<Long, Consumer<RWEvent>>()
     private val objectTopic = ConcurrentHashMap<Long, String>()
-    private val objectSet = mutableSetOf<RWObject>()
+    private val topicZone = ConcurrentHashMap<String, RWZone>()
 
-
-    init {
-        // 通过配置文件的方式进行默认topic的初始化
-        zoneSubscriptions["world"] = mutableSetOf()
-    }
-
-    fun subscribe(obj: RWObject, topic: String) {
+    fun subscribe(obj: RWObject, topic: String): Boolean {
         if (zoneSubscriptions.containsKey(topic)) {
             zoneSubscriptions[topic]!!.add(obj.id)
             objectTopic[obj.id] = topic
             objectHandler[obj.id] = obj.handler
-            objectSet.add(obj)
+            return true
         }
+        return false
     }
 
     fun unsubscribe(obj: RWObject, topic: String) {
@@ -38,8 +38,13 @@ open class SubscriptionRegistry {
             zoneSubscriptions[topic]!!.remove(obj.id)
             objectTopic.remove(obj.id)
             objectHandler.remove(obj.id)
-            objectSet.remove(obj)
         }
+    }
+
+    fun registerZone(zone: RWZone) {
+        log.info("区域创建: ${zone.zoneName}")
+        topicZone[zone.getZoneTopic()] = zone
+        zoneSubscriptions[zone.getZoneTopic()] = mutableSetOf()
     }
 
     fun findAllObjByTopic(topic: String): Flux<Long> {
@@ -50,8 +55,11 @@ open class SubscriptionRegistry {
         return Optional.ofNullable(objectHandler[objectId])
     }
 
-    fun findHumanByZone(zoneId: Long): Stream<Human> {
-        return objectSet.stream().filter { it is Human }.map { it as Human }
+    fun findHumanByTopic(topic: String): Stream<Human> {
+        if (!topicZone.containsKey(topic)) {
+            return Stream.empty()
+        }
+        return topicZone[topic]!!.getAllObjByType(Human::class).map { it as Human }
     }
 
 }

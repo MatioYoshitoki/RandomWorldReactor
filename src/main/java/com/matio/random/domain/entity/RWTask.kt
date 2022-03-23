@@ -40,7 +40,7 @@ open class ATKTask(
                 "ATK",
                 true,
                 (source as Human).atk,
-                "world",
+                source.topic,
                 source,
                 target!!
             )
@@ -59,7 +59,7 @@ open class StayTask(
             StayEvent(
                 System.currentTimeMillis(),
                 "Stay",
-                "world",
+                source.topic,
                 source,
             )
         )
@@ -78,7 +78,7 @@ open class EarnTask(
                 System.currentTimeMillis(),
                 "Earn",
                 earnSpeed + (Math.random() * 100).toInt(),
-                "world",
+                source.topic,
                 source,
             )
         )
@@ -96,7 +96,7 @@ open class UpgradeWeaponTask(
                 UpgradeWeaponEvent(
                     System.currentTimeMillis(),
                     "UpgradeWeapon",
-                    "world",
+                    source.topic,
                     200,
                     source
                 )
@@ -117,7 +117,7 @@ open class HealTask(
                 HealEvent(
                     System.currentTimeMillis(),
                     "Heal",
-                    "world",
+                    source.topic,
                     heal = 500,
                     source
                 )
@@ -137,7 +137,7 @@ open class UpgradeToolTask(
                 UpgradeToolEvent(
                     System.currentTimeMillis(),
                     "UpgradeTool",
-                    "world",
+                    source.topic,
                     30,
                     source
                 )

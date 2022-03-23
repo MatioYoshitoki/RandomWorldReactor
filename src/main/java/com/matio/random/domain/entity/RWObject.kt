@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory
 import reactor.core.publisher.Sinks
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ConcurrentMap
 import java.util.function.Consumer
 import java.util.stream.Stream
 import kotlin.reflect.KClass
@@ -21,7 +20,7 @@ import kotlin.reflect.KClass
 abstract class RWObject(
     val id: Long,
     val name: String,
-    val zoneId: Long,
+    var topic: String,
     val properties: ApplicationProperties,
     val sound: Sinks.Many<RWEvent>?,
     val taskChannel: Sinks.Many<RWTask>?,
@@ -65,18 +64,18 @@ abstract class RWObject(
 open class Human(
     id: Long,
     name: String,
-    zoneId: Long,
+    topic: String,
     var heal: Int = 800 + (Math.random() * 800).toInt(),
     open var atk: Int = 100 + (Math.random() * 200).toInt(),
     properties: ApplicationProperties,
     sound: Sinks.Many<RWEvent>?,
     taskChannel: Sinks.Many<RWTask>?,
     var earnSpeed: Int = 30,
-    private val vision: JFunction<Long, Stream<Human>>,
+    private val vision: JFunction<String, Stream<Human>>,
     var money: Int = (Math.random() * 200).toInt(),
     private var status: HumanStatus = HumanStatus.ALIVE
 ) : RWObject(
-    id, name, zoneId, properties, sound, taskChannel
+    id, name, topic, properties, sound, taskChannel
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -205,14 +204,14 @@ open class Human(
     }
 
     private fun findAllHumanSameZone(): Stream<Human> {
-        return vision.apply(this.zoneId)
+        return vision.apply(this.topic)
     }
 
     override fun destroy() {
         synchronized(this) {
             log.warn("角色【${this.name}】(${this.id})死亡!")
             status = HumanStatus.DEAD
-            sendMsg(ObjectDestroyEvent(123, "Destroy", "world", this))
+            sendMsg(ObjectDestroyEvent(123, "Destroy", topic, this))
         }
     }
 
