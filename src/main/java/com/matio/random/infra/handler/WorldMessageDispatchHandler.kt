@@ -36,7 +36,7 @@ open class WorldMessageDispatchHandler(
         worldChannel.asFlux()
             .doOnNext {
                 if (it is ObjectDestroyEvent) {
-                    subscriptionRegistry.unsubscribe(it.source!!, it.topic)
+                    subscriptionRegistry.findZoneByTopic(it.topic)?.clearObj(it.source!!)
                 }
             }
             .delayUntil { event ->

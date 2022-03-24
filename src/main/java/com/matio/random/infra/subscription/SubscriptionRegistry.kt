@@ -47,6 +47,10 @@ open class SubscriptionRegistry {
         zoneSubscriptions[zone.getZoneTopic()] = mutableSetOf()
     }
 
+    fun findZoneByTopic(topic: String): RWZone? {
+        return topicZone[topic]
+    }
+
     fun findAllObjByTopic(topic: String): Flux<Long> {
         return Flux.fromIterable(zoneSubscriptions[topic] ?: setOf())
     }

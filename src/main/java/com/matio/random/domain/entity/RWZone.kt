@@ -19,6 +19,8 @@ abstract class RWZone(
 
     abstract fun enterZone(obj: RWObject): Boolean
 
+    abstract fun clearObj(obj: RWObject): Boolean
+
     abstract fun handlerMsg(event: RWEvent)
 
     abstract fun moreMoney()
@@ -54,6 +56,15 @@ open class SimpleZone(
                 obj.openEyes { subscriptionRegistry.findHumanByTopic(it) }
             }
         }
+        return true
+    }
+
+    override fun clearObj(obj: RWObject): Boolean {
+        if (!objSet.contains(obj)) {
+            return false
+        }
+        objSet.remove(obj)
+        subscriptionRegistry.unsubscribe(obj, this.getZoneTopic())
         return true
     }
 
