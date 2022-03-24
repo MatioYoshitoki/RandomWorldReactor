@@ -42,7 +42,7 @@ open class SubscriptionRegistry {
     }
 
     fun registerZone(zone: RWZone) {
-        log.info("区域创建: ${zone.zoneName}")
+        log.info("Zone created ${zone.zoneName}")
         topicZone[zone.getZoneTopic()] = zone
         zoneSubscriptions[zone.getZoneTopic()] = mutableSetOf()
     }

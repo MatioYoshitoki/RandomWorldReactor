@@ -4,7 +4,6 @@ import com.matio.random.infra.constants.RWConstants
 import com.matio.random.infra.subscription.SubscriptionRegistry
 import java.util.concurrent.CopyOnWriteArraySet
 import java.util.stream.Stream
-import kotlin.math.log
 import kotlin.reflect.KClass
 
 abstract class RWZone(
@@ -41,7 +40,7 @@ open class SimpleZone(
     zoneName: String,
     money: Long,
     moneyIncrSpeed: Long,
-    private val subscription: SubscriptionRegistry
+    private val subscriptionRegistry: SubscriptionRegistry
 ) : RWZone(zoneId, zoneName, money = money, moneyIncrSpeed = moneyIncrSpeed) {
 
     override fun enterZone(obj: RWObject): Boolean {
@@ -49,8 +48,11 @@ open class SimpleZone(
             return false
         }
         obj.topic = this.getZoneTopic()
-        if (subscription.subscribe(obj, getZoneTopic())) {
+        if (subscriptionRegistry.subscribe(obj, getZoneTopic())) {
             objSet.add(obj)
+            if (obj is Human) {
+                obj.openEyes { subscriptionRegistry.findHumanByTopic(it) }
+            }
         }
         return true
     }

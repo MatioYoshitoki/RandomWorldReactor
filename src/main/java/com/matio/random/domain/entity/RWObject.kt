@@ -1,7 +1,8 @@
 package com.matio.random.domain.entity
 
 import com.matio.random.infra.JFunction
-import com.matio.random.infra.config.ApplicationProperties
+import com.matio.random.infra.config.TaskProperties
+import com.matio.random.infra.config.ZoneProperties
 import com.matio.random.infra.constants.HumanStatus
 import com.matio.random.infra.utils.SinksUtils
 import org.slf4j.LoggerFactory
@@ -20,14 +21,15 @@ import kotlin.reflect.KClass
 abstract class RWObject(
     val id: Long,
     val name: String,
-    var topic: String,
-    val properties: ApplicationProperties,
+    val zoneProperties: ZoneProperties,
+    val taskProperties: TaskProperties,
     val sound: Sinks.Many<RWEvent>?,
     val taskChannel: Sinks.Many<RWTask>?,
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
     val taskStack: Stack<RWTask> = Stack()
+    var topic: String = ""
 
     val handler: Consumer<RWEvent> = Consumer { handlerMsg(it) }
 
@@ -64,21 +66,21 @@ abstract class RWObject(
 open class Human(
     id: Long,
     name: String,
-    topic: String,
     var heal: Int = 800 + (Math.random() * 800).toInt(),
     open var atk: Int = 100 + (Math.random() * 200).toInt(),
-    properties: ApplicationProperties,
+    zoneProperties: ZoneProperties,
+    taskProperties: TaskProperties,
     sound: Sinks.Many<RWEvent>?,
     taskChannel: Sinks.Many<RWTask>?,
     var earnSpeed: Int = 30,
-    private val vision: JFunction<String, Stream<Human>>,
     var money: Int = (Math.random() * 200).toInt(),
     private var status: HumanStatus = HumanStatus.ALIVE
 ) : RWObject(
-    id, name, topic, properties, sound, taskChannel
+    id, name, zoneProperties, taskProperties, sound, taskChannel
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
+    private var vision: JFunction<String, Stream<Human>>? = null
 
     private val taskCountDownMap = ConcurrentHashMap<KClass<out RWTask>, Long>()
 
@@ -139,7 +141,7 @@ open class Human(
                 break
             }
             if (taskCountDownMap.containsKey(task::class)) {
-                if ((taskCountDownMap[task::class]!! + (properties.countDown[task::class.simpleName]
+                if ((taskCountDownMap[task::class]!! + (taskProperties.countDown[task::class.simpleName]
                         ?: 0)) < System.currentTimeMillis()
                 ) {
                     break
@@ -204,7 +206,11 @@ open class Human(
     }
 
     private fun findAllHumanSameZone(): Stream<Human> {
-        return vision.apply(this.topic)
+        return if (vision != null) {
+            vision!!.apply(this.topic)
+        } else {
+            Stream.empty()
+        }
     }
 
     override fun destroy() {
@@ -227,6 +233,10 @@ open class Human(
 
     fun isAlive(): Boolean {
         return status == HumanStatus.ALIVE
+    }
+
+    fun openEyes(vision: JFunction<String, Stream<Human>>) {
+        this.vision = vision
     }
 
     override fun subscribe(topic: String) {

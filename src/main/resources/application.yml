@@ -1,2 +1,33 @@
-random:
+random-world:
+  objects:
+    AA:
+      topic: "/topic/762136123"
+      heal: 1000
+    GGG:
+      topic: "/topic/762136123"
+      heal: 1000
+    MM:
+      topic: "/topic/762136123"
+      heal: 1000
+    UUU:
+      topic: "/topic/762136123"
+      heal: 1000
+    xxx:
+      topic: "/topic/762136123"
+      heal: 1000
+    A:
+      topic: "/topic/762136123"
+      heal: 1000
+    Z:
+      topic: "/topic/762136123"
+      heal: 1000
+    999:
+      topic: "/topic/762136123"
+      heal: 1000
+    TAT:
+      topic: "/topic/762136123"
+      heal: 1000
+    FFF:
+      topic: "/topic/762136123"
+      heal: 1000
 
