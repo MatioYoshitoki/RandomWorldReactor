@@ -1,8 +1,8 @@
 package com.matio.random.app.usecase
 
 import cn.hutool.core.lang.Snowflake
-import com.matio.random.domain.entity.obj.Being
-import com.matio.random.domain.entity.RWZone
+import com.matio.random.domain.entity.*
+import com.matio.random.domain.entity.obj.Fish
 import com.matio.random.infra.config.ObjectProperties
 import com.matio.random.infra.config.TaskProperties
 import com.matio.random.infra.handler.TaskHandler
@@ -32,14 +32,38 @@ open class HelloWorldUseCaseImpl(
         objectProperties.objects.forEach {
             val name = it.key
             log.info("init $name")
-            val being = Being(
+            val fish = Fish(
                 snowflake.nextId(),
                 name,
                 taskProperties = taskProperties,
                 sound = worldMessageDispatchHandler.worldChannel,
                 taskChannel = taskHandler.taskHandler,
+                personality = RWPersonality(
+                    mapOf(
+                        ATKEvent::class to sortedMapOf(
+                            500 to StayTask::class,
+                            4000 to ATKTask::class,
+                            10000 to EarnTask::class,
+                        ),
+                        EarnEvent::class to sortedMapOf(
+                            800 to ATKTask::class,
+                            2500 to StayTask::class,
+                            10000 to EarnTask::class,
+                        ),
+                        TimeEvent::class to sortedMapOf(
+                            300 to ATKTask::class,
+                            1500 to StayTask::class,
+                            10000 to EarnTask::class,
+                        ),
+                        GrowthEvent::class to sortedMapOf(
+                            1000 to ATKTask::class,
+                            1500 to StayTask::class,
+                            10000 to EarnTask::class,
+                        )
+                    )
+                )
             )
-            zone.enterZone(being)
+            zone.enterZone(fish)
         }
     }
 

@@ -54,7 +54,7 @@ open class SimpleZone(
         if (subscriptionRegistry.subscribe(obj, getZoneTopic())) {
             objSet.add(obj)
             if (obj is Being) {
-                obj.openEyes { subscriptionRegistry.findHumanByTopic(it) }
+                obj.openEyes { subscriptionRegistry.findObjByTopic(it, obj::class) }
             }
         }
         return true

@@ -1,6 +1,7 @@
 package com.matio.random.infra.scheduler
 
 import com.matio.random.domain.entity.RWZone
+import com.matio.random.domain.entity.obj.Fish
 import com.matio.random.infra.subscription.SubscriptionRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
@@ -16,17 +17,22 @@ open class AliveHumanScheduler(
     @Scheduled(fixedDelay = 10_000, initialDelay = 10_000)
     fun doTask() {
         log.info("获取存活列表")
-        subscriptionRegistry.findHumanByTopic(zone.getZoneTopic())
+        subscriptionRegistry.findObjByTopic(zone.getZoneTopic(), Fish::class)
             .forEach {
+                val fish = it as Fish
                 println(
                     """
             -------------------------
-            |编号 | ${it.id}         
-            |名称 | ${it.name}       
-            |金币 | ${it.money}      
-            |生命 | ${it.heal}       
-            |攻击 | ${it.atk}        
-            |挖矿 | ${it.earnSpeed}  
+            |编号  | ${fish.id}         
+            |名称  | ${fish.name}       
+            |金币  | ${fish.money}
+            |体重  | ${fish.weight}克
+            |最大HP| ${fish.maxHeal}
+            |HP   | ${fish.heal}
+            |HP恢复| ${fish.recoverSpeed}   
+            |攻击  | ${fish.atk}   
+            |防御  | ${fish.def}   
+            |进食  | ${fish.earnSpeed}  
             -------------------------
         """.trimIndent()
                 )

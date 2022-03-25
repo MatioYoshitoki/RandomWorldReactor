@@ -12,6 +12,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Consumer
 import java.util.stream.Stream
+import kotlin.reflect.KClass
 
 @Component
 open class SubscriptionRegistry {
@@ -58,11 +59,11 @@ open class SubscriptionRegistry {
         return Optional.ofNullable(objectHandler[objectId])
     }
 
-    fun findHumanByTopic(topic: String): Stream<Being> {
+    fun findObjByTopic(topic: String, clazz: KClass<out RWObject>): Stream<Being> {
         if (!topicZone.containsKey(topic)) {
             return Stream.empty()
         }
-        return topicZone[topic]!!.getAllObjByType(Being::class).map { it as Being }
+        return topicZone[topic]!!.getAllObjByType(clazz).map { it as Being }
     }
 
 }

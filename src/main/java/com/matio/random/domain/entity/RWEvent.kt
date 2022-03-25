@@ -1,5 +1,7 @@
 package com.matio.random.domain.entity
 
+import com.matio.random.infra.constants.GrowthType
+
 abstract class RWEvent(
     val eventId: Long,
     val eventType: String,
@@ -130,6 +132,6 @@ open class GrowthEvent(
     eventType: String,
     topic: String,
     target: RWObject,
-    val growthType: String,
+    val growthType: GrowthType,
     val growthValue: Int,
 ) : RWEvent(eventId, eventType, topic, null, target)

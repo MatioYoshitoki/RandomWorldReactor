@@ -1,6 +1,10 @@
 package com.matio.random.domain.entity
 
+import cn.hutool.core.util.RandomUtil
 import com.matio.random.domain.entity.obj.Being
+import com.matio.random.domain.entity.obj.Fish
+import com.matio.random.infra.constants.GrowthType
+import reactor.util.function.Tuples
 
 abstract class RWTask(
     private val stepSize: Int,
@@ -94,10 +98,9 @@ open class UpgradeToolTask(
 // 养鱼所需
 
 open class ATKTask(
-    stepSize: Int,
     source: Being,
     target: Being
-) : RWTask(stepSize, source, target) {
+) : RWTask(1, source, target) {
 
     override fun run() {
         source.sendMsg(
@@ -116,9 +119,8 @@ open class ATKTask(
 }
 
 open class StayTask(
-    stepSize: Int,
     source: Being,
-) : RWTask(stepSize, source, null) {
+) : RWTask(1, source, null) {
     override fun run() {
         source.sendMsg(
             StayEvent(
@@ -133,10 +135,9 @@ open class StayTask(
 }
 
 open class EarnTask(
-    stepSize: Int,
     source: Being,
     private val earnSpeed: Int,
-) : RWTask(stepSize, source, null) {
+) : RWTask(1, source, null) {
     override fun run() {
         source.sendMsg(
             EarnEvent(
@@ -152,20 +153,44 @@ open class EarnTask(
 }
 
 open class GrowthTask(
-    source: Being,
-    val growthType: String,
-    val growthValue: Int
+    source: Fish,
+    private val growthType: GrowthType,
+    private val growthValue: Int
 ) : RWTask(1, source, null) {
     override fun run() {
-        source.sendMsg(
-            GrowthEvent(
-                System.currentTimeMillis(),
-                "Growth",
-                source.topic,
-                source,
-                growthType,
-                growthValue
+        if ((source as Fish).cost((source.weight * 0.5).toInt())) {
+            source.sendMsg(
+                GrowthEvent(
+                    System.currentTimeMillis(),
+                    "Growth",
+                    source.topic,
+                    source,
+                    growthType,
+                    growthValue
+                )
             )
+        }
+    }
+
+    companion object {
+        private val growthTypeList =
+            listOf(GrowthType.EARN_SPEED, GrowthType.MAX_HEAL, GrowthType.RECOVER_SPEED, GrowthType.DEF, GrowthType.ATK)
+        private val growthValueMap = mapOf(
+            GrowthType.EARN_SPEED to Tuples.of(10, 30),
+            GrowthType.MAX_HEAL to Tuples.of(1000, 3000),
+            GrowthType.RECOVER_SPEED to Tuples.of(10, 30),
+            GrowthType.DEF to Tuples.of(100, 300),
+            GrowthType.ATK to Tuples.of(110, 330)
         )
+
+        fun randomType(): GrowthType {
+            return growthTypeList.random()
+        }
+
+        fun randomValue(type: GrowthType): Int {
+            val min = growthValueMap[type]!!.t1
+            val max = growthValueMap[type]!!.t2
+            return RandomUtil.randomInt(min, max)
+        }
     }
 }

@@ -1,9 +1,11 @@
 package com.matio.random.domain.entity.obj
 
+import cn.hutool.core.util.RandomUtil
 import com.matio.random.domain.entity.*
 import com.matio.random.infra.JFunction
 import com.matio.random.infra.config.TaskProperties
 import com.matio.random.infra.constants.BeingStatus
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Sinks
 import java.util.concurrent.ConcurrentHashMap
@@ -26,7 +28,7 @@ open class Being(
     id, name, taskProperties, sound, taskChannel
 ) {
 
-    private val log = LoggerFactory.getLogger(javaClass)
+    val log: Logger = LoggerFactory.getLogger(javaClass)
     var vision: JFunction<String, Stream<Being>>? = null
 
     private val taskCountDownMap = ConcurrentHashMap<KClass<out RWTask>, Long>()
@@ -108,11 +110,11 @@ open class Being(
         return when (event) {
             is ATKEvent -> {
                 if (rate < 0.05) {
-                    StayTask(1, this)
+                    StayTask(this)
                 } else if (rate < 0.5) {
-                    EarnTask(1, this, this.earnSpeed)
+                    EarnTask(this, this.earnSpeed)
                 } else {
-                    ATKTask(1, this, event.source as Being)
+                    ATKTask(this, event.source as Being)
                 }
             }
             is EarnEvent -> {
@@ -120,7 +122,7 @@ open class Being(
                     if (rate < 0.5) {
                         UpgradeToolTask(1, this)
                     } else {
-                        EarnTask(1, this, this.earnSpeed)
+                        EarnTask(this, this.earnSpeed)
                     }
                 } else if (this.money >= 300) {
                     val healPressure: Float = if (this.heal < 800) 1.5f else 1f
@@ -129,7 +131,7 @@ open class Being(
                     } else if (rate < (0.6 * healPressure)) {
                         UpgradeWeaponTask(1, this)
                     } else {
-                        EarnTask(1, this, this.earnSpeed)
+                        EarnTask(this, this.earnSpeed)
                     }
                 } else {
                     null
@@ -139,20 +141,20 @@ open class Being(
                 if (rate < 0.05) {
                     val target = findAllHumanSameZone().filter { it != this }.findAny()
                     if (target.isPresent) {
-                        ATKTask(1, this, target.get())
+                        ATKTask(this, target.get())
                     } else {
                         null
                     }
                 } else if (rate < 0.8) {
-                    EarnTask(1, this, this.earnSpeed)
+                    EarnTask(this, this.earnSpeed)
                 } else {
-                    StayTask(1, this)
+                    StayTask(this)
                 }
             }
         }
     }
 
-    private fun findAllHumanSameZone(): Stream<Being> {
+    fun findAllHumanSameZone(): Stream<Being> {
         return if (vision != null) {
             vision!!.apply(this.topic)
         } else {
@@ -184,6 +186,10 @@ open class Being(
 
     fun openEyes(vision: JFunction<String, Stream<Being>>) {
         this.vision = vision
+    }
+
+    fun tryEarn(): Int {
+        return earnSpeed + RandomUtil.randomInt(200)
     }
 
     override fun subscribe(topic: String) {
