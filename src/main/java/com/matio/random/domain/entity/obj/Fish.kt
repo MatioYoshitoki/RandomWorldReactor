@@ -5,8 +5,8 @@ import com.matio.random.domain.entity.*
 import com.matio.random.infra.config.TaskProperties
 import com.matio.random.infra.constants.BeingStatus
 import com.matio.random.infra.constants.GrowthType
+import com.matio.random.infra.utils.BattleUtils
 import reactor.core.publisher.Sinks
-import kotlin.math.max
 
 open class Fish(
     id: Long,
@@ -20,7 +20,7 @@ open class Fish(
     money: Int = (Math.random() * 200).toInt(),
     status: BeingStatus = BeingStatus.ALIVE,
     var maxHeal: Int = 3000,
-    var recoverSpeed: Int = 30,
+    var recoverSpeed: Int = 150,
     private val dodge: Int = 5, // max 100
     var def: Int = 90 + (Math.random() * 180).toInt(),
     var weight: Int = 800, // 体重
@@ -141,7 +141,7 @@ open class Fish(
         if (rate < this.dodge) {
             log.info("${this.name} 受到【${event.source!!.name}】攻击, 但未命中！")
         } else {
-            var damage = event.atk - this.def
+            var damage = (event.atk * (1 - BattleUtils.defRate(this.def))).toInt()
             if (damage <= 0) {
                 damage = 1
             }

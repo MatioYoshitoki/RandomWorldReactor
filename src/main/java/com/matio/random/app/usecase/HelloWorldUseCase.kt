@@ -9,6 +9,7 @@ import com.matio.random.infra.handler.TaskHandler
 import com.matio.random.infra.handler.WorldMessageDispatchHandler
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import java.util.concurrent.TimeUnit
 
 interface HelloWorldUseCase {
 
@@ -42,7 +43,7 @@ open class HelloWorldUseCaseImpl(
                     mapOf(
                         ATKEvent::class to sortedMapOf(
                             500 to StayTask::class,
-                            4000 to ATKTask::class,
+                            6000 to ATKTask::class,
                             10000 to EarnTask::class,
                         ),
                         EarnEvent::class to sortedMapOf(
@@ -51,12 +52,12 @@ open class HelloWorldUseCaseImpl(
                             10000 to EarnTask::class,
                         ),
                         TimeEvent::class to sortedMapOf(
-                            300 to ATKTask::class,
+                            500 to ATKTask::class,
                             1500 to StayTask::class,
                             10000 to EarnTask::class,
                         ),
                         GrowthEvent::class to sortedMapOf(
-                            1000 to ATKTask::class,
+                            1200 to ATKTask::class,
                             1500 to StayTask::class,
                             10000 to EarnTask::class,
                         )

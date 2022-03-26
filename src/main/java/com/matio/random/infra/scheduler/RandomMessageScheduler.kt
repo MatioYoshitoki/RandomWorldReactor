@@ -16,7 +16,6 @@ open class RandomMessageScheduler(
 
     @Scheduled(fixedDelay = 1_000, initialDelay = 3_000)
     fun doTask() {
-        log.info("send message to ${zone.getZoneTopic()}")
         worldMessageDispatchHandler.sendMsg(TimeEvent(System.currentTimeMillis(), "TIMER", zone.getZoneTopic()))
     }
 }
