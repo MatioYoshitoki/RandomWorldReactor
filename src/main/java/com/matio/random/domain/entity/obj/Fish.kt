@@ -30,6 +30,10 @@ open class Fish(
     override fun handlerMsg(event: RWEvent) {
         if (event.source != this) {
             if (event.target == this || event.target == null) {
+                if (this.money >= this.weight * 0.5) {
+                    val growthType = GrowthTask.randomType()
+                    growth(growthType, GrowthTask.randomValue(growthType))
+                }
                 when (event) {
                     is TimeEvent -> {
                         recover()
@@ -51,7 +55,7 @@ open class Fish(
                         if (event.target == this && (event.source as Being).isAlive()) {
                             beAtk(event)
                             if (heal <= 0) {
-                                this.destroy()
+                                this.destroy(event.source)
                             } else {
                                 eventBack(event)
                             }
@@ -63,40 +67,9 @@ open class Fish(
     }
 
     override fun nextTask(event: RWEvent): RWTask? {
-
         return when (event) {
-            is ATKEvent -> {
-                if (this.money >= this.weight * 0.5) {
-                    val growthType = GrowthTask.randomType()
-                    GrowthTask(this, growthType, GrowthTask.randomValue(growthType))
-                } else {
-                    personality.randomTask(event, this)
-                }
-            }
-            is EarnEvent -> {
-                if (this.money >= this.weight * 0.5) {
-                    val growthType = GrowthTask.randomType()
-                    GrowthTask(this, growthType, GrowthTask.randomValue(growthType))
-                } else {
-                    null
-                }
-            }
-            is GrowthEvent -> {
-                if (this.money >= this.weight * 0.5) {
-                    val growthType = GrowthTask.randomType()
-                    GrowthTask(this, growthType, GrowthTask.randomValue(growthType))
-                } else {
-                    personality.randomTask(event, this)
-                }
-            }
-            else -> {
-                if (this.money >= this.weight * 0.5) {
-                    val growthType = GrowthTask.randomType()
-                    GrowthTask(this, growthType, GrowthTask.randomValue(growthType))
-                } else {
-                    personality.randomTask(event, this)
-                }
-            }
+            is EarnEvent -> null
+            else -> personality.randomTask(event, this)
         }
     }
 

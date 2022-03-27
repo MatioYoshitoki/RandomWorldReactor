@@ -28,7 +28,7 @@ abstract class RWObject(
 
     abstract fun handlerMsg(event: RWEvent)
 
-    abstract fun destroy()
+    abstract fun destroy(target: RWObject?)
 
     abstract fun subscribe(topic: String)
 

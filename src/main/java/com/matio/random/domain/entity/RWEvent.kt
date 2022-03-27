@@ -89,9 +89,10 @@ open class ObjectDestroyEvent(
     eventType: String,
     topic: String,
     source: RWObject,
-) : SystemEvent(eventId, eventType, topic, source, null) {
+    target: RWObject?,
+) : SystemEvent(eventId, eventType, topic, source, target) {
     init {
-        msg = "${source.name}(${source.id})被销毁！"
+        msg = "${source.name} 被销毁！"
     }
 }
 

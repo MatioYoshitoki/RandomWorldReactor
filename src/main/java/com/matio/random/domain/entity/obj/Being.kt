@@ -71,7 +71,7 @@ open class Being(
                             this.heal -= event.atk
                             log.info("${this.name} 受到【${event.source.name}】攻击, 生命值减少${event.atk}。剩余生命值: ${this.heal}")
                             if (heal <= 0) {
-                                this.destroy()
+                                this.destroy(event.source)
                             } else {
                                 eventBack(event)
                             }
@@ -162,11 +162,11 @@ open class Being(
         }
     }
 
-    override fun destroy() {
+    override fun destroy(target: RWObject?) {
         synchronized(this) {
-            log.warn("角色【${this.name}】(${this.id})死亡!")
+            log.warn("角色【${this.name}】死亡!")
             status = BeingStatus.DEAD
-            sendMsg(ObjectDestroyEvent(123, "Destroy", topic, this))
+            sendMsg(ObjectDestroyEvent(123, "Destroy", topic, this, target))
         }
     }
 

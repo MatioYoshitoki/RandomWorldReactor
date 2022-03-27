@@ -1,8 +1,11 @@
 package com.matio.random.infra.handler
 
+import cn.hutool.core.lang.Snowflake
+import com.matio.random.domain.entity.EarnEvent
 import com.matio.random.domain.entity.obj.Being
 import com.matio.random.domain.entity.ObjectDestroyEvent
 import com.matio.random.domain.entity.RWEvent
+import com.matio.random.domain.entity.obj.Fish
 import com.matio.random.infra.subscription.SubscriptionRegistry
 import com.matio.random.infra.utils.SinksUtils
 import org.slf4j.LoggerFactory
@@ -14,7 +17,8 @@ import reactor.util.concurrent.Queues
 
 @Component
 open class WorldMessageDispatchHandler(
-    private val subscriptionRegistry: SubscriptionRegistry
+    private val subscriptionRegistry: SubscriptionRegistry,
+    private val snowflake: Snowflake
 ) : SmartLifecycle {
 
     open val worldChannel: Sinks.Many<RWEvent> =
@@ -37,6 +41,20 @@ open class WorldMessageDispatchHandler(
             .doOnNext {
                 if (it is ObjectDestroyEvent) {
                     subscriptionRegistry.findZoneByTopic(it.topic)?.clearObj(it.source!!)
+                    if (it.target != null && (it.source is Fish)) {
+                        val eater = subscriptionRegistry.findConsumerByObjId(it.target.id)
+                        if (eater.isPresent) {
+                            eater.get().accept(
+                                EarnEvent(
+                                    snowflake.nextId(),
+                                    "Earn",
+                                    it.source.weight,
+                                    it.target.topic,
+                                    it.target
+                                )
+                            )
+                        }
+                    }
                 }
             }
             .delayUntil { event ->
