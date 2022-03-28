@@ -20,11 +20,11 @@ open class Fish(
     money: Int = (Math.random() * 200).toInt(),
     status: BeingStatus = BeingStatus.ALIVE,
     var maxHeal: Int = 3000,
-    var recoverSpeed: Int = 150,
+    var recoverSpeed: Int = 100,
     private val dodge: Int = 5, // max 100
     var def: Int = 90 + (Math.random() * 180).toInt(),
     var weight: Int = 800, // 体重
-    private val personality: RWPersonality,
+    val personality: RWPersonality,
 ) : Being(id, name, heal, atk, taskProperties, sound, taskChannel, earnSpeed, money, status) {
 
     override fun handlerMsg(event: RWEvent) {

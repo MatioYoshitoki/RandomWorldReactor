@@ -1,6 +1,7 @@
 package com.matio.random.app.usecase
 
 import cn.hutool.core.lang.Snowflake
+import cn.hutool.core.util.RandomUtil
 import com.matio.random.domain.entity.*
 import com.matio.random.domain.entity.obj.Fish
 import com.matio.random.infra.config.ObjectProperties
@@ -33,36 +34,14 @@ open class HelloWorldUseCaseImpl(
         objectProperties.objects.forEach {
             val name = it.key
             log.info("init $name")
+
             val fish = Fish(
                 snowflake.nextId(),
                 name,
                 taskProperties = taskProperties,
                 sound = worldMessageDispatchHandler.worldChannel,
                 taskChannel = taskHandler.taskHandler,
-                personality = RWPersonality(
-                    mapOf(
-                        ATKEvent::class to sortedMapOf(
-                            500 to StayTask::class,
-                            6000 to ATKTask::class,
-                            10000 to EarnTask::class,
-                        ),
-                        EarnEvent::class to sortedMapOf(
-                            800 to ATKTask::class,
-                            2500 to StayTask::class,
-                            10000 to EarnTask::class,
-                        ),
-                        TimeEvent::class to sortedMapOf(
-                            500 to ATKTask::class,
-                            1500 to StayTask::class,
-                            10000 to EarnTask::class,
-                        ),
-                        GrowthEvent::class to sortedMapOf(
-                            1200 to ATKTask::class,
-                            1500 to StayTask::class,
-                            10000 to EarnTask::class,
-                        )
-                    )
-                )
+                personality = RWPersonality.random(RandomUtil.randomInt(1, 196))
             )
             zone.enterZone(fish)
         }

@@ -178,7 +178,7 @@ open class GrowthTask(
         private val growthValueMap = mapOf(
             GrowthType.EARN_SPEED to Tuples.of(10, 30),
             GrowthType.MAX_HEAL to Tuples.of(1000, 3000),
-            GrowthType.RECOVER_SPEED to Tuples.of(50, 150),
+            GrowthType.RECOVER_SPEED to Tuples.of(20, 100),
             GrowthType.DEF to Tuples.of(100, 300),
             GrowthType.ATK to Tuples.of(110, 330)
         )

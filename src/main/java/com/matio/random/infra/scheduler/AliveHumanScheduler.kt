@@ -24,7 +24,8 @@ open class AliveHumanScheduler(
                     """
             -------------------------
             |编号  | ${fish.id}         
-            |名称  | ${fish.name}       
+            |名称  | ${fish.name}    
+            |性格  | ${fish.personality.personalityName()}
             |金币  | ${fish.money}
             |体重  | ${fish.weight}克
             |最大HP| ${fish.maxHeal}
