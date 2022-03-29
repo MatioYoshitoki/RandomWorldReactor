@@ -2,6 +2,12 @@ logging:
   level:
     root: INFO
     com.rw.random: DEBUG
+spring:
+  redis:
+    host: 127.0.0.1
+    password:
+    database: 0
+
 random-world:
   objects:
     AA:
