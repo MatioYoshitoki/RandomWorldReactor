@@ -1,0 +1,16 @@
+server:
+  port: 7777
+
+spring:
+  application:
+    name: random-world-websocket-server
+
+
+  main:
+    allow-bean-definition-overriding: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
