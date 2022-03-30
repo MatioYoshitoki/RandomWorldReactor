@@ -1,6 +1,8 @@
 package com.rw.random.infra.handler
 
 import cn.hutool.core.lang.Snowflake
+import com.rw.random.domain.dto.RedisStreamMessage
+import com.rw.random.domain.entity.ATKEvent
 import com.rw.random.domain.entity.EarnEvent
 import com.rw.random.domain.entity.obj.Being
 import com.rw.random.domain.entity.ObjectDestroyEvent
@@ -18,7 +20,8 @@ import reactor.util.concurrent.Queues
 @Component
 open class WorldMessageDispatchHandler(
     private val subscriptionRegistry: SubscriptionRegistry,
-    private val snowflake: Snowflake
+    private val snowflake: Snowflake,
+    private val pubsubMessageHandler: PubsubMessageHandler,
 ) : SmartLifecycle {
 
     open val worldChannel: Sinks.Many<RWEvent> =
@@ -55,6 +58,11 @@ open class WorldMessageDispatchHandler(
                             )
                         }
                     }
+                }
+            }
+            .doOnNext {
+                if (it is ATKEvent) {
+                    pubsubMessageHandler.sendMessage(RedisStreamMessage(it.source!!.name, it.source.id, it.msg))
                 }
             }
             .delayUntil { event ->

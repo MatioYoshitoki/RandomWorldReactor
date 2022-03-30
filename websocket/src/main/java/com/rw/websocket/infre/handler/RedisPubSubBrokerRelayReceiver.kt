@@ -1,11 +1,15 @@
 package com.rw.websocket.infre.handler
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.rw.websocket.infre.session.DefaultRandomWorldSessionManager
+import com.rw.websocket.infre.subscription.SubscriptionRegistry
+import com.rw.websocket.infre.utils.SimpleMessageUtils
 import org.slf4j.LoggerFactory
 import org.springframework.context.SmartLifecycle
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate
 import org.springframework.messaging.Message
 import org.springframework.stereotype.Component
+import org.springframework.web.server.session.DefaultWebSessionManager
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
@@ -13,14 +17,17 @@ import reactor.core.publisher.Mono
 open class RedisPubSubBrokerRelayReceiver(
     private val redisTemplate: ReactiveStringRedisTemplate,
     private val objectMapper: ObjectMapper,
+    private val subscriptionRegistry: SubscriptionRegistry,
+    private val sessionManager: DefaultRandomWorldSessionManager,
 ) : SmartLifecycle {
 
+    private var isRunning = false
     private val log = LoggerFactory.getLogger(javaClass)
 
     @Suppress("UNCHECKED_CAST")
-    fun receive(): Flux<Message<*>> {
+    fun receive(): Flux<String> {
         return redisTemplate.listenToChannel(
-            "topic_random_world"
+            "rw_key_message"
         )
             .map {
                 objectMapper.writeValueAsString(it)
@@ -31,7 +38,7 @@ open class RedisPubSubBrokerRelayReceiver(
             .onErrorResume { err ->
                 log.error("Build message failed, err_msg={}", err.message, err)
                 Mono.empty()
-            } as Flux<Message<*>>
+            }
     }
 
     companion object {
@@ -39,14 +46,32 @@ open class RedisPubSubBrokerRelayReceiver(
     }
 
     override fun start() {
+        this.isRunning = true
         receive()
+            .flatMap { msg ->
+                Flux.fromIterable(
+                    subscriptionRegistry.getSubscriptions(SimpleMessageUtils.buildWorldDestination())
+                )
+                    .flatMap {
+                        Mono.justOrEmpty(sessionManager.find(it.sessionId))
+                    }
+                    .map {
+                        it!!.webSocketSession
+                    }
+                    .flatMap {
+                        val sendMsg = it.textMessage(objectMapper.writeValueAsString(msg))
+                        log.info("send msg: {}", sendMsg.payloadAsText)
+                        it.send(Mono.just(sendMsg))
+                    }
+            }
             .subscribe()
     }
 
     override fun stop() {
+        this.isRunning = false
     }
 
     override fun isRunning(): Boolean {
-        return true
+        return isRunning
     }
 }

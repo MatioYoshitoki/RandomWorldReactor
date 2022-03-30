@@ -81,6 +81,7 @@ open class IncomingHandler(
             .map {
                 session.textMessage(it)
             }
+            .flatMap { session.send(Mono.just(it)) }
             .onErrorResume {
                 log.error("处理客户端消息失败", it)
                 Mono.empty()
