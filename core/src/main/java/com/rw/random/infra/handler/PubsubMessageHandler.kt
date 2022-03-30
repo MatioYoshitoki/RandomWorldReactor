@@ -29,6 +29,6 @@ open class PubsubMessageHandler(
     }
 
     override fun isRunning(): Boolean {
-        return isRunning
+        return true
     }
 }

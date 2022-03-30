@@ -7,6 +7,12 @@ spring:
     host: 127.0.0.1
     password:
     database: 0
+  r2dbc:
+    url: r2dbc:mysql://localhost:3307/random_world?useSSL=false&useUnicode=true&characterEncoding=utf-8&sslMode=disabled
+    username: root
+    password: chiwen2233
+    timeout: 10
+
 
 random-world:
   objects:

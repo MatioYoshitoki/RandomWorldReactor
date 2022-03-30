@@ -1,14 +1,14 @@
 package com.rw.websocket.infre.config
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.rw.websocket.infre.handler.IncomingHandler
+import com.rw.websocket.infre.handler.DefaultMessageBrokerRelayPublisher
 import com.rw.websocket.infre.handler.RandomWorldWebSocketHandler
-import com.rw.websocket.infre.session.DefaultRandomWorldSessionManager
-import com.rw.websocket.infre.subscription.SubscriptionRegistry
 import org.springframework.beans.factory.annotation.Configurable
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate
 import org.springframework.integration.channel.FluxMessageChannel
+import org.springframework.integration.endpoint.ReactiveStreamsConsumer
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.HandlerMapping
 import org.springframework.web.reactive.handler.SimpleUrlHandlerMapping
@@ -24,6 +24,20 @@ open class ApplicationConfiguration(
     @Bean("inboundChannel")
     open fun clientInboundChannelFlux(): FluxMessageChannel {
         return FluxMessageChannel()
+    }
+
+    @Bean("outboundChannel")
+    open fun clientOutboundChannelFlux(): FluxMessageChannel {
+        return FluxMessageChannel()
+    }
+
+    @Bean
+    open fun clientInboundChannelConsumer(
+        @Qualifier("inboundChannel")
+        clientInboundChannel: FluxMessageChannel,
+        redisTemplate: ReactiveStringRedisTemplate
+    ): ReactiveStreamsConsumer {
+        return ReactiveStreamsConsumer(clientInboundChannel, DefaultMessageBrokerRelayPublisher(redisTemplate))
     }
 
     @Bean

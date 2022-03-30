@@ -11,9 +11,9 @@ open class RedisConfiguration(
     private val redisProperties: RedisProperties
 ) {
 
-    @Bean
-    open fun masterTemplate(connectionFactory: ReactiveRedisConnectionFactory): ReactiveStringRedisTemplate {
-        return ReactiveStringRedisTemplate(connectionFactory)
-    }
+//    @Bean
+//    open fun masterTemplate(connectionFactory: ReactiveRedisConnectionFactory): ReactiveStringRedisTemplate {
+//        return ReactiveStringRedisTemplate(connectionFactory)
+//    }
 
 }

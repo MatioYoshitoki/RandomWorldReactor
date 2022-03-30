@@ -11,6 +11,7 @@ import com.rw.websocket.infre.session.SessionMetadataUtils
 import com.rw.websocket.infre.subscription.SubscriptionRegistry
 import com.rw.websocket.infre.utils.SimpleMessageUtils
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.integration.channel.FluxMessageChannel
 import org.springframework.messaging.Message
 import org.springframework.messaging.support.MessageBuilder
@@ -25,6 +26,7 @@ import java.util.*
 
 @Component
 open class IncomingHandler(
+    @Qualifier("inboundChannel")
     private val clientInboundChannelFlux: FluxMessageChannel,
     private val objectMapper: ObjectMapper,
     private val brokerSessionManager: DefaultRandomWorldSessionManager,
@@ -74,10 +76,14 @@ open class IncomingHandler(
                     initChannelsAndMetadata(it, session)
                 }
             }
-            .doOnNext { clientInboundChannelFlux.send(it) }
+            .map { objectMapper.writeValueAsString(it) }
+//            .doOnNext { clientInboundChannelFlux.send(it) }
+            .map {
+                session.textMessage(it)
+            }
             .onErrorResume {
                 log.error("处理客户端消息失败", it)
-                Mono.empty<Message<String>>()
+                Mono.empty()
             }
             .then()
     }
