@@ -1,6 +1,5 @@
 package com.rw.websocket.infre.handler
 
-
 import com.fasterxml.jackson.core.async_.JsonFactory
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -10,7 +9,6 @@ import com.rw.websocket.infre.contants.HttpConstants
 import com.rw.websocket.infre.session.DefaultRandomWorldSessionManager
 import com.rw.websocket.infre.session.SessionMetadataUtils
 import com.rw.websocket.infre.subscription.SubscriptionRegistry
-import com.rw.websocket.infre.utils.ReactorUtils
 import com.rw.websocket.infre.utils.SimpleMessageUtils
 import org.slf4j.LoggerFactory
 import org.springframework.integration.channel.FluxMessageChannel
@@ -24,11 +22,10 @@ import reactivejson.ReactorObjectReader
 import reactor.core.publisher.Mono
 import reactor.util.function.Tuples
 import java.util.*
-import kotlin.collections.HashMap
 
 @Component
 open class IncomingHandler(
-    private val clientInboundChannel: FluxMessageChannel,
+    private val clientInboundChannelFlux: FluxMessageChannel,
     private val objectMapper: ObjectMapper,
     private val brokerSessionManager: DefaultRandomWorldSessionManager,
     private val subscriptionRegistry: SubscriptionRegistry,
@@ -77,7 +74,7 @@ open class IncomingHandler(
                     initChannelsAndMetadata(it, session)
                 }
             }
-            .doOnNext { clientInboundChannel.send(it) }
+            .doOnNext { clientInboundChannelFlux.send(it) }
             .onErrorResume {
                 log.error("处理客户端消息失败", it)
                 Mono.empty<Message<String>>()
