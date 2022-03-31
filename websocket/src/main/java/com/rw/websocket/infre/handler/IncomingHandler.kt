@@ -76,10 +76,8 @@ open class IncomingHandler(
                     initChannelsAndMetadata(it, session)
                 }
             }
-            .map { objectMapper.writeValueAsString(it) }
-//            .doOnNext { clientInboundChannelFlux.send(it) }
             .map {
-                session.textMessage(it)
+                session.textMessage(it.payload)
             }
             .flatMap { session.send(Mono.just(it)) }
             .onErrorResume {

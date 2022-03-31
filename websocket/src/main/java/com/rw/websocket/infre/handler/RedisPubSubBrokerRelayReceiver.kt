@@ -1,6 +1,8 @@
 package com.rw.websocket.infre.handler
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.rw.random.common.constants.RedisKeyConstants
+import com.rw.random.common.dto.RedisStreamMessage
 import com.rw.websocket.infre.session.DefaultRandomWorldSessionManager
 import com.rw.websocket.infre.subscription.SubscriptionRegistry
 import com.rw.websocket.infre.utils.SimpleMessageUtils
@@ -25,16 +27,20 @@ open class RedisPubSubBrokerRelayReceiver(
     private val log = LoggerFactory.getLogger(javaClass)
 
     @Suppress("UNCHECKED_CAST")
-    fun receive(): Flux<String> {
+    fun receive(): Flux<RedisStreamMessage> {
         return redisTemplate.listenToChannel(
-            "rw_key_message"
+            RedisKeyConstants.REDIS_CHANNEL_KEY
         )
+            .doOnNext {
+                log.info("receive msg from redis: {}", it.message)
+            }
             .map {
-                objectMapper.writeValueAsString(it)
+                objectMapper.readValue(it.message, RedisStreamMessage::class.java)
             }
             .doOnNext {
                 log.info("receive message from redis: {}", it)
             }
+            .filter { it.level!! <= 1 }
             .onErrorResume { err ->
                 log.error("Build message failed, err_msg={}", err.message, err)
                 Mono.empty()
@@ -48,6 +54,7 @@ open class RedisPubSubBrokerRelayReceiver(
     override fun start() {
         this.isRunning = true
         receive()
+            .map { objectMapper.writeValueAsString(it) }
             .flatMap { msg ->
                 Flux.fromIterable(
                     subscriptionRegistry.getSubscriptions(SimpleMessageUtils.buildWorldDestination())
@@ -59,7 +66,7 @@ open class RedisPubSubBrokerRelayReceiver(
                         it!!.webSocketSession
                     }
                     .flatMap {
-                        val sendMsg = it.textMessage(objectMapper.writeValueAsString(msg))
+                        val sendMsg = it.textMessage(msg)
                         log.info("send msg: {}", sendMsg.payloadAsText)
                         it.send(Mono.just(sendMsg))
                     }

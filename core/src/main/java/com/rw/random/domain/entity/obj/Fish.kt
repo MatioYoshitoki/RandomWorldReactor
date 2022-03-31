@@ -6,6 +6,7 @@ import com.rw.random.infra.config.TaskProperties
 import com.rw.random.infra.constants.BeingStatus
 import com.rw.random.infra.constants.GrowthType
 import com.rw.random.infra.utils.BattleUtils
+import com.rw.random.infra.utils.SinksUtils
 import reactor.core.publisher.Sinks
 
 open class Fish(
@@ -113,13 +114,27 @@ open class Fish(
         val rate = RandomUtil.randomInt(100)
         if (rate < this.dodge) {
             log.info("${this.name} 受到【${event.source!!.name}】攻击, 但未命中！")
+            SinksUtils.tryEmit(
+                this.sound!!,
+                BeAtkEvent(System.currentTimeMillis(), "BeAtk", this.topic, this, event.source,
+                    success = false,
+                    ct = false,
+                    damage = 0
+                )
+            )
         } else {
-            var damage = (event.atk * (1 - BattleUtils.defRate(this.def))).toInt()
-            if (damage <= 0) {
-                damage = 1
-            }
+            val damage = (event.atk * (1 - BattleUtils.defRate(this.def))).toInt()
             this.heal -= damage
-            log.info("${this.name} 受到【${event.source!!.name}】攻击, 生命值减少${damage}。剩余生命值: ${this.heal}")
+            SinksUtils.tryEmit(
+                this.sound!!,
+                BeAtkEvent(
+                    System.currentTimeMillis(), "BeAtk", this.topic, this, event.source!!,
+                    success = true,
+                    ct = false,
+                    damage = damage
+                )
+            )
+            log.info("${this.name} 受到【${event.source.name}】攻击, 生命值减少${damage}。剩余生命值: ${this.heal}")
         }
 
     }

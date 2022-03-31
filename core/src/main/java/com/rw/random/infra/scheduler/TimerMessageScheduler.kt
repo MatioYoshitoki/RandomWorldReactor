@@ -8,7 +8,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
-open class RandomMessageScheduler(
+open class TimerMessageScheduler(
     private val worldMessageDispatchHandler: WorldMessageDispatchHandler,
     private val zone: RWZone
 ) {

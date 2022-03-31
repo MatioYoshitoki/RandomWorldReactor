@@ -1,4 +1,4 @@
-package com.rw.random.domain.dto
+package com.rw.random.common.dto
 
 open class RWResult<T>(
     val errno: Int,
@@ -12,7 +12,7 @@ open class RWResult<T>(
         }
 
         fun <T> failed(message: String, date: T?): RWResult<T> {
-            return RWResult(-1, message, null)
+            return RWResult(-1, message, date)
         }
     }
 }

@@ -136,3 +136,30 @@ open class GrowthEvent(
     val growthType: GrowthType,
     val growthValue: Int,
 ) : RWEvent(eventId, eventType, topic, null, target)
+
+open class InternalEvent(
+    eventId: Long,
+    eventType: String,
+    topic: String,
+    source: RWObject,
+    target: RWObject
+) : RWEvent(eventId, eventType, topic, source, target)
+
+open class BeAtkEvent(
+    eventId: Long,
+    eventType: String,
+    topic: String,
+    source: RWObject,
+    target: RWObject,
+    success: Boolean,
+    val ct: Boolean,
+    damage: Int,
+) : InternalEvent(eventId, eventType, topic, source, target) {
+    init {
+        msg = if (success) {
+            "${source.name} 受到【${target.name}】攻击,${if (ct) "产生暴击，" else ""} 生命值减少${damage}。"
+        } else {
+            "${source.name} 受到【${target.name}】攻击, 但未命中。"
+        }
+    }
+}
