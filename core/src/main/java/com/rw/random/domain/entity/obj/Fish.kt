@@ -3,7 +3,7 @@ package com.rw.random.domain.entity.obj
 import cn.hutool.core.util.RandomUtil
 import com.rw.random.domain.entity.*
 import com.rw.random.infra.config.TaskProperties
-import com.rw.random.infra.constants.BeingStatus
+import com.rw.random.common.constants.BeingStatus
 import com.rw.random.infra.constants.GrowthType
 import com.rw.random.infra.utils.BattleUtils
 import com.rw.random.infra.utils.SinksUtils

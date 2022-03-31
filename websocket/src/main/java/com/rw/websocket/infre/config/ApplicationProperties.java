@@ -5,6 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("random-world.websocket")
 public class ApplicationProperties {
 
+    private String coreUrl = "http://127.0.0.1:8080";
     private NettyProperties netty = new NettyProperties();
 
     public NettyProperties getNetty() {
@@ -13,6 +14,14 @@ public class ApplicationProperties {
 
     public void setNetty(NettyProperties netty) {
         this.netty = netty;
+    }
+
+    public String getCoreUrl() {
+        return coreUrl;
+    }
+
+    public void setCoreUrl(String coreUrl) {
+        this.coreUrl = coreUrl;
     }
 
     public static class NettyProperties {
