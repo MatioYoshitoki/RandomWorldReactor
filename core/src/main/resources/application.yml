@@ -10,7 +10,7 @@ spring:
   r2dbc:
     url: r2dbc:mysql://localhost:3307/random_world?useSSL=false&useUnicode=true&characterEncoding=utf-8&sslMode=disabled
     username: root
-    password: chiwen2233
+    password: Chiwen2233
     timeout: 10
 
 

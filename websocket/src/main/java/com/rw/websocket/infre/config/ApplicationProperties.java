@@ -6,6 +6,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class ApplicationProperties {
 
     private String coreUrl = "http://127.0.0.1:8080";
+    private Long workId = 1L;
+    private Long centerId = 1L;
     private NettyProperties netty = new NettyProperties();
 
     public NettyProperties getNetty() {
@@ -22,6 +24,22 @@ public class ApplicationProperties {
 
     public void setCoreUrl(String coreUrl) {
         this.coreUrl = coreUrl;
+    }
+
+    public Long getWorkId() {
+        return workId;
+    }
+
+    public void setWorkId(Long workId) {
+        this.workId = workId;
+    }
+
+    public Long getCenterId() {
+        return centerId;
+    }
+
+    public void setCenterId(Long centerId) {
+        this.centerId = centerId;
     }
 
     public static class NettyProperties {

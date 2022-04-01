@@ -8,7 +8,6 @@ import com.rw.websocket.infre.exception.EnterFishException
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Mono
-import reactor.core.publisher.switchIfEmpty
 import java.net.URI
 
 interface GameService {
@@ -32,7 +31,7 @@ open class GameServiceImpl(
         return userRepository.findIdByToken(accessToken)
             .flatMap { userId ->
                 webClient.post()
-                    .uri(URI.create(applicationProperties.coreUrl + "/v1/api/object"))
+                    .uri(URI.create(applicationProperties.coreUrl + "/v1/api/object/enter"))
                     .retrieve()
                     .bodyToMono(RWResult::class.java)
                     .filter {

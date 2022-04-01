@@ -31,15 +31,12 @@ open class RedisPubSubBrokerRelayReceiver(
         return redisTemplate.listenToChannel(
             RedisKeyConstants.REDIS_CHANNEL_KEY
         )
-            .doOnNext {
-                log.info("receive msg from redis: {}", it.message)
-            }
             .map {
                 objectMapper.readValue(it.message, RedisStreamMessage::class.java)
             }
-            .doOnNext {
-                log.info("receive message from redis: {}", it)
-            }
+//            .doOnNext {
+//                log.info("receive message from redis: {}", it)
+//            }
             .filter { it.level!! <= 1 }
             .onErrorResume { err ->
                 log.error("Build message failed, err_msg={}", err.message, err)

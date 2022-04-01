@@ -1,5 +1,7 @@
 package com.rw.websocket.infre.config
 
+import cn.hutool.core.lang.Snowflake
+import cn.hutool.core.lang.generator.SnowflakeGenerator
 import com.rw.websocket.infre.handler.DefaultMessageBrokerRelayPublisher
 import com.rw.websocket.infre.handler.RandomWorldWebSocketHandler
 import org.springframework.beans.factory.annotation.Configurable
@@ -20,6 +22,11 @@ import org.springframework.web.reactive.socket.WebSocketHandler
 open class ApplicationConfiguration(
     private val applicationProperties: ApplicationProperties
 ) {
+
+    @Bean
+    open fun snowflake(): Snowflake {
+        return Snowflake(applicationProperties.workId, applicationProperties.centerId)
+    }
 
     @Bean("inboundChannel")
     open fun clientInboundChannelFlux(): FluxMessageChannel {

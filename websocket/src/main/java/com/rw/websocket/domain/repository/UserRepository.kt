@@ -2,6 +2,7 @@ package com.rw.websocket.domain.repository
 
 import com.rw.random.common.constants.RedisKeyConstants
 import com.rw.websocket.domain.entity.User
+import com.rw.websocket.infre.exception.NotLoginException
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate
 import org.springframework.data.r2dbc.query.Criteria.where
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate
@@ -9,6 +10,7 @@ import org.springframework.data.relational.core.query.Query
 import org.springframework.data.relational.core.query.Update
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
+import reactor.core.publisher.switchIfEmpty
 
 interface UserRepository {
 
@@ -28,16 +30,17 @@ open class UserRepositoryImpl(
 
 
     override fun findOneByUserName(userName: String): Mono<User> {
-        return entityTemplate.selectOne(
-            Query.query(
-                where("user_name").`is`(userName)
+        return entityTemplate.select(User::class.java)
+            .matching(
+                Query.query(
+                    where("user_name").`is`(userName)
+                )
+                    .columns("id")
+                    .columns("user_name")
+                    .columns("password")
+                    .columns("access_token")
             )
-                .columns("id")
-                .columns("user_name")
-                .columns("password")
-                .columns("access_token"),
-            User::class.java
-        )
+            .first()
     }
 
     override fun updateAccessToken(userId: Long, accessToken: String): Mono<String> {
@@ -51,6 +54,10 @@ open class UserRepositoryImpl(
                 redisTemplate.opsForValue()
                     .set(getUserAccessTokenKey(userId), accessToken)
             }
+            .delayUntil {
+                redisTemplate.opsForValue()
+                    .set(getAccessTokenUserKey(accessToken), userId.toString())
+            }
             .map { accessToken }
     }
 
@@ -58,6 +65,7 @@ open class UserRepositoryImpl(
         return redisTemplate.opsForValue()
             .get(getAccessTokenUserKey(accessToken))
             .map { it.toLong() }
+            .switchIfEmpty { Mono.error(NotLoginException()) }
     }
 
     private fun getUserAccessTokenKey(userId: Long): String {

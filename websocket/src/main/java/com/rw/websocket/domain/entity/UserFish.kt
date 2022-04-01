@@ -2,7 +2,7 @@ package com.rw.websocket.domain.entity
 
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
-import java.util.Date
+import java.sql.Date
 
 @Table("user_fish")
 open class UserFish(
@@ -13,7 +13,7 @@ open class UserFish(
     @Column("fish_status")
     val fishStatus: Int,
     @Column("create_time")
-    val createTime: Date
+    var createTime: Date? = null
 ) {
 
 }

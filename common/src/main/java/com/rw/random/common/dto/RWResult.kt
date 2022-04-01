@@ -1,10 +1,12 @@
 package com.rw.random.common.dto
 
 open class RWResult<T>(
-    val errno: Int,
-    val message: String,
-    val data: T?
+    var errno: Int,
+    var message: String,
+    var data: T?
 ) {
+
+    constructor() : this(0, "", null)
 
     companion object {
         fun <T> success(message: String, data: T?): RWResult<T> {

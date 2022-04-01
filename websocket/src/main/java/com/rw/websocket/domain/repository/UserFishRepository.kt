@@ -5,7 +5,7 @@ import com.rw.websocket.domain.entity.UserFish
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
-import java.util.*
+import java.sql.Date
 
 interface UserFishRepository {
 
@@ -19,6 +19,6 @@ open class UserFishRepositoryImpl(
 ) : UserFishRepository {
     override fun bindFish(userId: Long, fishId: Long): Mono<UserFish> {
         return entityTemplate.insert(UserFish::class.java)
-            .using(UserFish(userId, fishId, BeingStatus.ALIVE.ordinal, Date()))
+            .using(UserFish(userId, fishId, BeingStatus.ALIVE.ordinal))
     }
 }
