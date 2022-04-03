@@ -1,11 +1,10 @@
 package com.rw.websocket.domain.repository
 
 import com.rw.random.common.constants.BeingStatus
-import com.rw.websocket.domain.entity.UserFish
+import com.rw.random.common.entity.UserFish
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
-import java.sql.Date
 
 interface UserFishRepository {
 

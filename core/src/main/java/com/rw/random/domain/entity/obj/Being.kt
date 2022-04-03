@@ -16,6 +16,7 @@ import kotlin.reflect.KClass
 open class Being(
     id: Long,
     name: String,
+    hasMaster: Boolean = false,
     var heal: Int = 800 + (Math.random() * 800).toInt(),
     open var atk: Int = 100 + (Math.random() * 200).toInt(),
     taskProperties: TaskProperties,
@@ -25,7 +26,7 @@ open class Being(
     var money: Int = (Math.random() * 200).toInt(),
     private var status: BeingStatus = BeingStatus.ALIVE
 ) : RWObject(
-    id, name, taskProperties, sound, taskChannel
+    id, name, hasMaster, taskProperties, sound, taskChannel
 ) {
 
     val log: Logger = LoggerFactory.getLogger(javaClass)

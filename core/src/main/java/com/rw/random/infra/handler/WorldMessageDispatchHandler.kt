@@ -1,13 +1,17 @@
 package com.rw.random.infra.handler
 
 import cn.hutool.core.lang.Snowflake
+import com.rw.random.common.constants.BeingStatus
 import com.rw.random.common.dto.RedisStreamMessage
 import com.rw.random.domain.entity.*
 import com.rw.random.domain.entity.obj.Being
 import com.rw.random.domain.entity.obj.Fish
+import com.rw.random.infra.listener.ObjectStatusModifyEvent
 import com.rw.random.infra.subscription.SubscriptionRegistry
 import com.rw.random.infra.utils.SinksUtils
 import org.slf4j.LoggerFactory
+import org.springframework.context.ApplicationEventPublisher
+import org.springframework.context.ApplicationEventPublisherAware
 import org.springframework.context.SmartLifecycle
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
@@ -19,7 +23,7 @@ open class WorldMessageDispatchHandler(
     private val subscriptionRegistry: SubscriptionRegistry,
     private val snowflake: Snowflake,
     private val pubsubMessageHandler: PubsubMessageHandler,
-) : SmartLifecycle {
+) : SmartLifecycle, ApplicationEventPublisherAware {
 
     open val worldChannel: Sinks.Many<RWEvent> =
         Sinks.many().unicast().onBackpressureBuffer(Queues.get<RWEvent>(512).get())
@@ -40,21 +44,7 @@ open class WorldMessageDispatchHandler(
         worldChannel.asFlux()
             .doOnNext {
                 if (it is ObjectDestroyEvent) {
-                    subscriptionRegistry.findZoneByTopic(it.topic)?.clearObj(it.source!!)
-                    if (it.target != null && (it.source is Fish)) {
-                        val eater = subscriptionRegistry.findConsumerByObjId(it.target.id)
-                        if (eater.isPresent) {
-                            eater.get().accept(
-                                EarnEvent(
-                                    snowflake.nextId(),
-                                    "Earn",
-                                    it.source.weight,
-                                    it.target.topic,
-                                    it.target
-                                )
-                            )
-                        }
-                    }
+                    destroyObj(it)
                 }
             }
             .doOnNext {
@@ -104,12 +94,47 @@ open class WorldMessageDispatchHandler(
             .subscribe()
     }
 
+    /**
+     * 销毁对象
+     * */
+    private fun destroyObj(event: ObjectDestroyEvent){
+        if (event.source!!.hasMaster) {
+            publishObjectStatusChangeEvent(event.source.id, BeingStatus.DEAD)
+        }
+        subscriptionRegistry.findZoneByTopic(event.topic)?.clearObj(event.source)
+        if (event.target != null && (event.source is Fish)) {
+            val eater = subscriptionRegistry.findConsumerByObjId(event.target.id)
+            if (eater.isPresent) {
+                eater.get().accept(
+                    EarnEvent(
+                        snowflake.nextId(),
+                        "Earn",
+                        event.source.weight,
+                        event.target.topic,
+                        event.target
+                    )
+                )
+            }
+        }
+    }
+
+    @Suppress("SameParameterValue")
+    private fun publishObjectStatusChangeEvent(sourceId: Long, status: BeingStatus){
+        this.eventPublisher.publishEvent(ObjectStatusModifyEvent.of(sourceId, status))
+    }
+
     override fun stop() {
         running = false
     }
 
     override fun isRunning(): Boolean {
         return running
+    }
+
+    private lateinit var eventPublisher: ApplicationEventPublisher
+
+    override fun setApplicationEventPublisher(applicationEventPublisher: ApplicationEventPublisher) {
+        this.eventPublisher = applicationEventPublisher
     }
 
 }

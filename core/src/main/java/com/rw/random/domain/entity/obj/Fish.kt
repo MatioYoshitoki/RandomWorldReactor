@@ -12,6 +12,7 @@ import reactor.core.publisher.Sinks
 open class Fish(
     id: Long,
     name: String,
+    hasMaster: Boolean = false,
     var weight: Int = 800, // 体重
     var maxHeal: Int = 10000 + (Math.random() * 5000).toInt(),
     heal: Int = maxHeal,
@@ -26,7 +27,7 @@ open class Fish(
     taskChannel: Sinks.Many<RWTask>?,
     status: BeingStatus = BeingStatus.ALIVE,
     val personality: RWPersonality,
-) : Being(id, name, heal, atk, taskProperties, sound, taskChannel, earnSpeed, money, status) {
+) : Being(id, name, hasMaster, heal, atk, taskProperties, sound, taskChannel, earnSpeed, money, status) {
 
     override fun handlerMsg(event: RWEvent) {
         if (event.source != this) {

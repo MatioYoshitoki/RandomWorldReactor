@@ -47,6 +47,7 @@ open class EnterObjectUseCaseImpl(
         return Fish(
             snowflake.nextId(),
             name,
+            hasMaster = true,
             taskProperties = taskProperties,
             sound = worldMessageDispatchHandler.worldChannel,
             taskChannel = taskHandler.taskHandler,

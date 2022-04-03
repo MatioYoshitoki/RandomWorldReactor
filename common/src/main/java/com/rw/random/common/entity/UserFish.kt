@@ -1,4 +1,4 @@
-package com.rw.websocket.domain.entity
+package com.rw.random.common.entity
 
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table

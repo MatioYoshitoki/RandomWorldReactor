@@ -15,6 +15,7 @@ import java.util.function.Consumer
 abstract class RWObject(
     val id: Long,
     val name: String,
+    var hasMaster: Boolean = false,
     val taskProperties: TaskProperties,
     val sound: Sinks.Many<RWEvent>?,
     private val taskChannel: Sinks.Many<RWTask>?,
