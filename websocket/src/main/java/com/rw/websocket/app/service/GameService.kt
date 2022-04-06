@@ -28,25 +28,26 @@ open class GameServiceImpl(
     private val webClient = WebClient.create()
 
     override fun enterFish(accessToken: String): Mono<Long> {
-        return userRepository.findIdByToken(accessToken)
-            .flatMap { userId ->
-                webClient.post()
-                    .uri(URI.create(applicationProperties.coreUrl + "/v1/api/object/enter"))
-                    .retrieve()
-                    .bodyToMono(RWResult::class.java)
-                    .filter {
-                        it.data != null
-                    }
-                    .flatMap {
-                        if (it.errno == 0) {
-                            val fishId = it.data.toString().toLong()
-                            userFishRepository.bindFish(userId, fishId)
-                                .map { fishId }
-                        } else {
-                            Mono.error(EnterFishException(it.message))
-                        }
-                    }
-            }
+        return Mono.empty()
+//        return userRepository.findIdByToken(accessToken)
+//            .flatMap { userId ->
+//                webClient.post()
+//                    .uri(URI.create(applicationProperties.coreUrl + "/api/v1/object/enter"))
+//                    .retrieve()
+//                    .bodyToMono(RWResult::class.java)
+//                    .filter {
+//                        it.data != null
+//                    }
+//                    .flatMap {
+//                        if (it.errno == 0) {
+//                            val fishId = it.data.toString().toLong()
+//                            userFishRepository.bindFish(userId, fishId)
+//                                .map { fishId }
+//                        } else {
+//                            Mono.error(EnterFishException(it.message))
+//                        }
+//                    }
+//            }
     }
 
     override fun fishing(): Mono<Void> {

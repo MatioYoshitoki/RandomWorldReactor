@@ -6,6 +6,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class ApplicationProperties {
 
     private String coreUrl = "http://127.0.0.1:8080";
+    private Long newFishPrice = 200L;
+    private String moneyName = "灵石";
     private Long workId = 1L;
     private Long centerId = 1L;
     private NettyProperties netty = new NettyProperties();
@@ -40,6 +42,22 @@ public class ApplicationProperties {
 
     public void setCenterId(Long centerId) {
         this.centerId = centerId;
+    }
+
+    public Long getNewFishPrice() {
+        return newFishPrice;
+    }
+
+    public void setNewFishPrice(Long newFishPrice) {
+        this.newFishPrice = newFishPrice;
+    }
+
+    public String getMoneyName() {
+        return moneyName;
+    }
+
+    public void setMoneyName(String moneyName) {
+        this.moneyName = moneyName;
     }
 
     public static class NettyProperties {

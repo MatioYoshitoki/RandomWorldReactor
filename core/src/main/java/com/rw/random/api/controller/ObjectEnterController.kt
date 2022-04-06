@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
 
 @RestController
-@RequestMapping("/v1/api/object")
+@RequestMapping("/api/v1/object")
 open class ObjectEnterController(
     private val humanUseCase: EnterObjectUseCase
 ) {

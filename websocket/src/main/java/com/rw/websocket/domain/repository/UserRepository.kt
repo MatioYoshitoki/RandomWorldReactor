@@ -1,8 +1,9 @@
 package com.rw.websocket.domain.repository
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.rw.random.common.constants.RedisKeyConstants
 import com.rw.websocket.domain.entity.User
-import com.rw.websocket.infre.exception.NotLoginException
+import com.rw.websocket.domain.entity.UserWithProperty
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate
 import org.springframework.data.r2dbc.query.Criteria.where
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate
@@ -10,7 +11,6 @@ import org.springframework.data.relational.core.query.Query
 import org.springframework.data.relational.core.query.Update
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
-import reactor.core.publisher.switchIfEmpty
 
 interface UserRepository {
 
@@ -18,7 +18,11 @@ interface UserRepository {
 
     fun updateAccessToken(userId: Long, accessToken: String): Mono<String>
 
-    fun findIdByToken(accessToken: String): Mono<Long>
+    fun findAccessTokenByUserId(userId: Long): Mono<String>
+
+    fun findUserWithPropertyByToken(accessToken: String): Mono<UserWithProperty>
+
+    fun updateUserWithProperty(accessToken: String, update: Map<String, String>): Mono<Boolean>
 
 }
 
@@ -26,6 +30,7 @@ interface UserRepository {
 open class UserRepositoryImpl(
     private val entityTemplate: R2dbcEntityTemplate,
     private val redisTemplate: ReactiveStringRedisTemplate,
+    private val objectMapper: ObjectMapper
 ) : UserRepository {
 
 
@@ -61,11 +66,32 @@ open class UserRepositoryImpl(
             .map { accessToken }
     }
 
-    override fun findIdByToken(accessToken: String): Mono<Long> {
+    override fun findAccessTokenByUserId(userId: Long): Mono<String> {
         return redisTemplate.opsForValue()
-            .get(getAccessTokenUserKey(accessToken))
-            .map { it.toLong() }
-            .switchIfEmpty { Mono.error(NotLoginException()) }
+            .get(getUserAccessTokenKey(userId))
+    }
+
+    override fun findUserWithPropertyByToken(accessToken: String): Mono<UserWithProperty> {
+        return redisTemplate.opsForHash<String, String>()
+            .entries(getAccessTokenUserKey(accessToken))
+            .collectList()
+            .map { entry -> entry.associate { Pair(it.key, it.value) } }
+            .filter { it.containsKey(UserWithProperty.USER_ID_FIELD) && it.containsKey(UserWithProperty.ACCESS_TOKEN_FIELD) }
+            .map {
+                UserWithProperty(
+                    it[UserWithProperty.USER_ID_FIELD]!!.toLong(),
+                    it[UserWithProperty.USER_NAME_FIELD] ?: "",
+                    it[UserWithProperty.ACCESS_TOKEN_FIELD]!!,
+                    it[UserWithProperty.EXP_FIELD]?.toLong() ?: 0L,
+                    it[UserWithProperty.MONEY_FIELD]?.toLong() ?: 0L,
+                    it[UserWithProperty.FISH_MAX_COUNT_FIELD]?.toLong() ?: 1L
+                )
+            }
+    }
+
+    override fun updateUserWithProperty(accessToken: String, update: Map<String, String>): Mono<Boolean> {
+        return redisTemplate.opsForHash<String, String>()
+            .putAll(getAccessTokenUserKey(accessToken), update)
     }
 
     private fun getUserAccessTokenKey(userId: Long): String {
