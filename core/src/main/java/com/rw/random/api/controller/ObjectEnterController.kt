@@ -10,16 +10,21 @@ import reactor.core.publisher.Mono
 @RestController
 @RequestMapping("/api/v1/object")
 open class ObjectEnterController(
-    private val humanUseCase: EnterObjectUseCase
+    private val enterObjectUseCase: EnterObjectUseCase
 ) {
 
     @PostMapping("/enter")
     fun enter(): Mono<RWResult<Long>> {
-        return humanUseCase.runCase()
+        return enterObjectUseCase.runCase()
             .map {
                 RWResult.success("Enter Success!", it)
             }
             .defaultIfEmpty(RWResult.failed("Too Many!", 0))
+    }
+
+    @PostMapping("/out")
+    fun out(): Mono<RWResult<Long>> {
+
     }
 
 }

@@ -16,7 +16,7 @@ interface UserRepository {
 
     fun findOneByUserName(userName: String): Mono<User>
 
-    fun updateAccessToken(userId: Long, accessToken: String): Mono<String>
+    fun updateAccessToken(userId: Long, accessToken: String): Mono<UserWithProperty>
 
     fun findAccessTokenByUserId(userId: Long): Mono<String>
 
@@ -48,7 +48,7 @@ open class UserRepositoryImpl(
             .first()
     }
 
-    override fun updateAccessToken(userId: Long, accessToken: String): Mono<String> {
+    override fun updateAccessToken(userId: Long, accessToken: String): Mono<UserWithProperty> {
         return entityTemplate.update(
             Query.query(where("id").`is`(userId)),
             Update.update("access_token", accessToken),
@@ -59,14 +59,24 @@ open class UserRepositoryImpl(
                 redisTemplate.opsForValue()
                     .set(getUserAccessTokenKey(userId), accessToken)
             }
-            .delayUntil {
+            .flatMap {
                 findUserWithPropertyFromDB(userId, accessToken)
-                    .flatMap {
+                    .delayUntil {
                         redisTemplate.opsForHash<String, String>()
                             .putAll(getAccessTokenUserKey(accessToken), it)
                     }
+                    .map {
+                        UserWithProperty(
+                            userId,
+                            it[UserWithProperty.USER_NAME_FIELD]!!,
+                            accessToken,
+                            it[UserWithProperty.EXP_FIELD]?.toLong() ?: 0,
+                            it[UserWithProperty.MONEY_FIELD]?.toLong() ?: 0,
+                            it[UserWithProperty.FISH_MAX_COUNT_FIELD]?.toLong() ?: 0
+                        )
+                    }
             }
-            .map { accessToken }
+
     }
 
     override fun findAccessTokenByUserId(userId: Long): Mono<String> {

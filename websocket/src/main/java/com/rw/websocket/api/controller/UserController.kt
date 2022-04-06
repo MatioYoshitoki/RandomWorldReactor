@@ -28,12 +28,12 @@ open class UserController(
     fun login(@RequestBody loginRequest: LoginRequest): Mono<RWResult<UserWithProperty>> {
         return loginUseCase.runCase(loginRequest.userName, loginRequest.password)
             .map {
-                RWResult.success("", it)
+                RWResult.success("success", it)
             }
-//            .onErrorResume {
-//                Mono.justOrEmpty(it.message?.let { it1 -> RWResult.failed(it1, "") })
-//            }
-//            .defaultIfEmpty(RWResult.failed("未知错误", ""))
+            .onErrorResume {
+                Mono.just(RWResult.failed(it.message ?: "", null))
+            }
+            .defaultIfEmpty(RWResult.failed("未知错误", null))
     }
 
     @PostMapping("/logout")
