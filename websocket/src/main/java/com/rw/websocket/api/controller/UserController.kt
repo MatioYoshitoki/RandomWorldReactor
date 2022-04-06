@@ -4,6 +4,7 @@ import com.rw.random.common.dto.RWResult
 import com.rw.websocket.app.usecase.LoginUseCase
 import com.rw.websocket.domain.dto.request.LoginRequest
 import com.rw.websocket.domain.dto.request.RegisterRequest
+import com.rw.websocket.domain.entity.UserWithProperty
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
@@ -24,15 +25,15 @@ open class UserController(
     }
 
     @PostMapping("/login")
-    fun login(@RequestBody loginRequest: LoginRequest): Mono<RWResult<String>> {
+    fun login(@RequestBody loginRequest: LoginRequest): Mono<RWResult<UserWithProperty>> {
         return loginUseCase.runCase(loginRequest.userName, loginRequest.password)
             .map {
                 RWResult.success("", it)
             }
-            .onErrorResume {
-                Mono.justOrEmpty(it.message?.let { it1 -> RWResult.failed(it1, "") })
-            }
-            .defaultIfEmpty(RWResult.failed("未知错误", ""))
+//            .onErrorResume {
+//                Mono.justOrEmpty(it.message?.let { it1 -> RWResult.failed(it1, "") })
+//            }
+//            .defaultIfEmpty(RWResult.failed("未知错误", ""))
     }
 
     @PostMapping("/logout")

@@ -60,8 +60,11 @@ open class UserRepositoryImpl(
                     .set(getUserAccessTokenKey(userId), accessToken)
             }
             .delayUntil {
-                redisTemplate.opsForValue()
-                    .set(getAccessTokenUserKey(accessToken), userId.toString())
+                findUserWithPropertyFromDB(userId, accessToken)
+                    .flatMap {
+                        redisTemplate.opsForHash<String, String>()
+                            .putAll(getAccessTokenUserKey(accessToken), it)
+                    }
             }
             .map { accessToken }
     }
@@ -100,6 +103,26 @@ open class UserRepositoryImpl(
 
     private fun getAccessTokenUserKey(token: String): String {
         return RedisKeyConstants.ACCESS_TOKEN_USER + token
+    }
+
+    private fun findUserWithPropertyFromDB(userId: Long, accessToken: String): Mono<MutableMap<String, String>> {
+        return entityTemplate.databaseClient
+            .sql(
+                """
+                    select a.id, a.user_name, a.access_token, b.exp, b.money, b.fish_max_count from user a 
+                    left join user_property b on a.id = b.id
+                    where a.id = $userId
+                """.trimIndent()
+            )
+            .fetch()
+            .first()
+            .map { result ->
+                val map = result.entries.associate {
+                    Pair(it.key, it.value.toString())
+                }.toMutableMap()
+                map[UserWithProperty.ACCESS_TOKEN_FIELD] = accessToken
+                map
+            }
     }
 }
 
