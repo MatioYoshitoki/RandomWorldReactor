@@ -24,7 +24,7 @@ open class Being(
     taskChannel: Sinks.Many<RWTask>?,
     var earnSpeed: Int = 30,
     var money: Int = (Math.random() * 200).toInt(),
-    private var status: BeingStatus = BeingStatus.ALIVE
+    var status: BeingStatus = BeingStatus.ALIVE
 ) : RWObject(
     id, name, hasMaster, taskProperties, sound, taskChannel
 ) {

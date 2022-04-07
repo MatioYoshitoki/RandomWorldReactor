@@ -20,7 +20,7 @@ open class Fish(
     atk: Int = 300 + (Math.random() * 200).toInt(),
     var def: Int = 90 + (Math.random() * 180).toInt(),
     earnSpeed: Int = 30,
-    private val dodge: Int = 5, // max 100
+    val dodge: Int = 5, // max 100
     money: Int = (Math.random() * 200).toInt(),
     taskProperties: TaskProperties,
     sound: Sinks.Many<RWEvent>?,
@@ -28,6 +28,26 @@ open class Fish(
     status: BeingStatus = BeingStatus.ALIVE,
     val personality: RWPersonality,
 ) : Being(id, name, hasMaster, heal, atk, taskProperties, sound, taskChannel, earnSpeed, money, status) {
+
+    companion object {
+        val KEYS =
+            listOf(
+                "id",
+                "name",
+                "weight",
+                "maxHeal",
+                "heal",
+                "recoverSpeed",
+                "atk",
+                "def",
+                "earnSpeed",
+                "dodge",
+                "money",
+                "status",
+                "personalityId",
+                "personalityRandomRate",
+            )
+    }
 
     override fun handlerMsg(event: RWEvent) {
         if (event.source != this) {
@@ -117,7 +137,8 @@ open class Fish(
             log.info("${this.name} 受到【${event.source!!.name}】攻击, 但未命中！")
             SinksUtils.tryEmit(
                 this.sound!!,
-                BeAtkEvent(System.currentTimeMillis(), "BeAtk", this.topic, this, event.source,
+                BeAtkEvent(
+                    System.currentTimeMillis(), "BeAtk", this.topic, this, event.source,
                     success = false,
                     ct = false,
                     damage = 0

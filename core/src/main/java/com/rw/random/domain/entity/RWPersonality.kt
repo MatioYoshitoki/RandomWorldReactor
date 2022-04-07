@@ -8,14 +8,15 @@ import java.util.*
 import kotlin.reflect.KClass
 
 open class RWPersonality(
-    private val personality: Int
+    val personality: Int,
+    val originRandomRate: Int = RandomUtil.randomInt(randomRange)
 ) {
 
     private var eventBehavior: Map<KClass<out RWEvent>, SortedMap<Int, KClass<out RWTask>>> = mapOf()
 
     init {
         val position = position(personality)
-        var randomRate = RandomUtil.randomInt(randomRange)
+        var randomRate: Int = originRandomRate
         val personalityMap: MutableMap<KClass<out RWEvent>, SortedMap<Int, KClass<out RWTask>>> =
             when (position.t1) {
                 0 -> {
