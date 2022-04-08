@@ -34,7 +34,7 @@ open class UserFishRepositoryImpl(
 
     override fun updateStatus(fishId: Long, status: BeingStatus): Mono<Void> {
         return entityTemplate.update(
-            Query.query(where("fish_id").`is`(fishId)), Update.update("status", status), UserFish::class.java
+            Query.query(where("fish_id").`is`(fishId)), Update.update("fish_status", status.ordinal), UserFish::class.java
         ).then()
     }
 }

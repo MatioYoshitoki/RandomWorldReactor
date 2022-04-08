@@ -2,7 +2,7 @@ package com.rw.random.common.entity
 
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
-import java.sql.Date
+import java.time.LocalDateTime
 
 @Table("user_fish")
 open class UserFish(
@@ -13,7 +13,7 @@ open class UserFish(
     @Column("fish_status")
     val fishStatus: Int,
     @Column("create_time")
-    var createTime: Date? = null
+    var createTime: LocalDateTime? = null
 ) {
 
 }

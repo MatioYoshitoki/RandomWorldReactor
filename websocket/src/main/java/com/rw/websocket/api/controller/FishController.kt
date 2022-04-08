@@ -3,6 +3,8 @@ package com.rw.websocket.api.controller
 import com.rw.random.common.dto.RWResult
 import com.rw.websocket.app.service.GameService
 import com.rw.websocket.app.usecase.FishCreateUseCase
+import com.rw.websocket.app.usecase.FishingUseCase
+import com.rw.websocket.app.usecase.PutFishUseCase
 import com.rw.websocket.domain.dto.request.FishRequest
 import org.slf4j.LoggerFactory
 import org.springframework.web.bind.annotation.*
@@ -11,7 +13,9 @@ import reactor.core.publisher.Mono
 @RestController
 @RequestMapping("/api/v1/game/fish")
 open class FishController(
-    private val fishCreateUseCase: FishCreateUseCase
+    private val fishCreateUseCase: FishCreateUseCase,
+    private val fishingUseCase: FishingUseCase,
+    private val fishPutFishUseCase: PutFishUseCase
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -37,10 +41,18 @@ open class FishController(
     fun fishPut(
         @RequestHeader("access_token") accessToken: String,
         @RequestBody fishRequest: FishRequest
-    ): Mono<RWResult<String>> {
+    ): Mono<RWResult<Long>> {
         log.info("fishId=${fishRequest.fishId}")
         // TODO 放鱼
-        return Mono.empty()
+        return fishPutFishUseCase.runCase(accessToken, fishRequest.fishId)
+            .map {
+                RWResult.success("投放成功", it)
+            }
+            .onErrorResume {
+                log.error("create error", it)
+                Mono.just(RWResult.failed("投放失败, ${it.message}", null))
+            }
+            .defaultIfEmpty(RWResult.failed("投放失败", null))
     }
 
 
@@ -50,6 +62,10 @@ open class FishController(
             .map {
                 RWResult.success("投放成功!", it)
             }
+            .onErrorResume {
+                log.error("create error", it)
+                Mono.just(RWResult.failed("投放失败, ${it.message}", null))
+            }
             .defaultIfEmpty(RWResult.failed("投放失败", null))
     }
 
@@ -58,9 +74,11 @@ open class FishController(
     fun fishing(
         @RequestHeader("access_token") accessToken: String,
         @RequestBody fishRequest: FishRequest
-    ): Mono<RWResult<String>> {
+    ): Mono<RWResult<Long>> {
         // TODO 捞鱼
-        return Mono.empty()
+        return fishingUseCase.runCase(accessToken, fishRequest.fishId)
+            .map { RWResult.success("捕捞成功", it) }
+            .defaultIfEmpty(RWResult.failed("捕捞失败", null))
     }
 
     @PostMapping("/eat")

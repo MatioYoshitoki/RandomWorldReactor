@@ -22,7 +22,7 @@ class UserWithProperty(
         const val USER_NAME_FIELD = "user_name"
         const val ACCESS_TOKEN_FIELD = "access_token"
         const val EXP_FIELD = "exp"
-        const val MONEY_FIELD = "money_field"
+        const val MONEY_FIELD = "money"
         const val FISH_MAX_COUNT_FIELD = "fish_max_count"
     }
 }

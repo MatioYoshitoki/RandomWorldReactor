@@ -69,6 +69,7 @@ open class FishRepositoryImpl(
                 mapOf(
                     "id" to it.id.toString(),
                     "name" to it.name,
+                    "hasMaster" to it.hasMaster.toString(),
                     "weight" to it.weight.toString(),
                     "maxHeal" to it.maxHeal.toString(),
                     "heal" to it.heal.toString(),

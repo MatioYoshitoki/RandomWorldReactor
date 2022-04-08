@@ -5,6 +5,7 @@ import com.rw.websocket.app.usecase.LoginUseCase
 import com.rw.websocket.domain.dto.request.LoginRequest
 import com.rw.websocket.domain.dto.request.RegisterRequest
 import com.rw.websocket.domain.entity.UserWithProperty
+import org.slf4j.LoggerFactory
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
@@ -17,6 +18,8 @@ import reactor.core.publisher.Mono
 open class UserController(
     private val loginUseCase: LoginUseCase
 ) {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     @PostMapping("/register")
     fun register(@RequestBody registerRequest: RegisterRequest): Mono<RWResult<String>> {
@@ -31,6 +34,7 @@ open class UserController(
                 RWResult.success("success", it)
             }
             .onErrorResume {
+                log.error("login error", it)
                 Mono.just(RWResult.failed(it.message ?: "", null))
             }
             .defaultIfEmpty(RWResult.failed("未知错误", null))

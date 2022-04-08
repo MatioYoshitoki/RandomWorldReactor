@@ -12,6 +12,8 @@ interface UserFishRepository {
 
     fun bindFish(userId: Long, fishId: Long): Mono<UserFish>
 
+    fun findFishOwner(fishId: Long): Mono<Long>
+
     fun poolFishCount(userId: Long): Mono<Long>
 
 }
@@ -23,6 +25,17 @@ open class UserFishRepositoryImpl(
     override fun bindFish(userId: Long, fishId: Long): Mono<UserFish> {
         return entityTemplate.insert(UserFish::class.java)
             .using(UserFish(userId, fishId, BeingStatus.ALIVE.ordinal))
+    }
+
+    override fun findFishOwner(fishId: Long): Mono<Long> {
+        return entityTemplate.selectOne(
+            Query.query(
+                where("fish_id").`is`(fishId)
+            ), UserFish::class.java
+        )
+            .map {
+                it.userId
+            }
     }
 
     override fun poolFishCount(userId: Long): Mono<Long> {

@@ -3,6 +3,7 @@ package com.rw.random.infra.scheduler
 import com.rw.random.domain.entity.RWZone
 import com.rw.random.domain.entity.obj.Fish
 import com.rw.random.domain.repository.FishRepository
+import com.rw.random.domain.service.PersistenceService
 import com.rw.random.infra.subscription.SubscriptionRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
@@ -13,7 +14,7 @@ import reactor.core.publisher.Flux
 open class AliveFishPersistenceScheduler(
     private val subscriptionRegistry: SubscriptionRegistry,
     private val zone: RWZone,
-    private val fishRepository: FishRepository,
+    private val persistenceService: PersistenceService
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -23,7 +24,7 @@ open class AliveFishPersistenceScheduler(
         Flux.fromStream(subscriptionRegistry.findObjByTopic(zone.getZoneTopic(), Fish::class))
             .filter { it is Fish }
             .delayUntil {
-                fishRepository.saveOne(it as Fish)
+                persistenceService.persistenceFish(it as Fish)
             }
             .subscribe()
     }

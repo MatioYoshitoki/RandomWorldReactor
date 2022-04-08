@@ -185,6 +185,14 @@ open class Being(
         return status == BeingStatus.ALIVE
     }
 
+    fun isSleep(): Boolean {
+        return status == BeingStatus.SLEEP
+    }
+
+    fun isDead(): Boolean {
+        return status == BeingStatus.DEAD
+    }
+
     fun openEyes(vision: JFunction<String, Stream<Being>>) {
         this.vision = vision
     }

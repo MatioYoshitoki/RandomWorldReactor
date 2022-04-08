@@ -60,7 +60,7 @@ open class UserRepositoryImpl(
                     .set(getUserAccessTokenKey(userId), accessToken)
             }
             .flatMap {
-                findUserWithPropertyFromDB(userId, accessToken)
+                findUserWithPropertyFromDB(userId)
                     .delayUntil {
                         redisTemplate.opsForHash<String, String>()
                             .putAll(getAccessTokenUserKey(accessToken), it)
@@ -88,7 +88,10 @@ open class UserRepositoryImpl(
         return redisTemplate.opsForHash<String, String>()
             .entries(getAccessTokenUserKey(accessToken))
             .collectList()
-            .map { entry -> entry.associate { Pair(it.key, it.value) } }
+            .map { list ->
+                println(list)
+                list.associate { Pair(it.key, it.value) }
+            }
             .filter { it.containsKey(UserWithProperty.USER_ID_FIELD) && it.containsKey(UserWithProperty.ACCESS_TOKEN_FIELD) }
             .map {
                 UserWithProperty(
@@ -115,11 +118,11 @@ open class UserRepositoryImpl(
         return RedisKeyConstants.ACCESS_TOKEN_USER + token
     }
 
-    private fun findUserWithPropertyFromDB(userId: Long, accessToken: String): Mono<MutableMap<String, String>> {
+    private fun findUserWithPropertyFromDB(userId: Long): Mono<MutableMap<String, String>> {
         return entityTemplate.databaseClient
             .sql(
                 """
-                    select a.id, a.user_name, a.access_token, b.exp, b.money, b.fish_max_count from user a 
+                    select a.access_token, b.exp, b.fish_max_count, b.money, a.id as `user_id`, a.user_name  from user a 
                     left join user_property b on a.id = b.id
                     where a.id = $userId
                 """.trimIndent()
@@ -130,7 +133,6 @@ open class UserRepositoryImpl(
                 val map = result.entries.associate {
                     Pair(it.key, it.value.toString())
                 }.toMutableMap()
-                map[UserWithProperty.ACCESS_TOKEN_FIELD] = accessToken
                 map
             }
     }

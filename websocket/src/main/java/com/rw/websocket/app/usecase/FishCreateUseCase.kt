@@ -74,9 +74,8 @@ open class FishCreateUseCaseImpl(
             .uri(URI.create(applicationProperties.coreUrl + "/api/v1/object/enter"))
             .retrieve()
             .bodyToMono(RWResult::class.java)
-            .filter {
-                it.data != null
-            }
+            .filter { it.errno == 0 }
+            .filter { it.data != null }
     }
 
 }
