@@ -14,6 +14,8 @@ interface UserPropertyRepository {
 
     fun updateMoney(userId: Long, money: Long): Mono<Boolean>
 
+    fun updateExp(userId: Long, exp: Long): Mono<Boolean>
+
 }
 
 @Component
@@ -28,6 +30,15 @@ open class UserPropertyRepositoryImpl(
         return entityTemplate.update(
             Query.query(where("id").`is`(userId)),
             Update.update("money", money),
+            UserProperty::class.java
+        )
+            .map { it == 1 }
+    }
+
+    override fun updateExp(userId: Long, exp: Long): Mono<Boolean> {
+        return entityTemplate.update(
+            Query.query(where("id").`is`(userId)),
+            Update.update("exp", exp),
             UserProperty::class.java
         )
             .map { it == 1 }

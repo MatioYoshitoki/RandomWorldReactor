@@ -2,6 +2,7 @@ package com.rw.websocket.api.controller
 
 import com.rw.random.common.dto.RWResult
 import com.rw.websocket.app.service.GameService
+import com.rw.websocket.app.usecase.EatFishUseCase
 import com.rw.websocket.app.usecase.FishCreateUseCase
 import com.rw.websocket.app.usecase.FishingUseCase
 import com.rw.websocket.app.usecase.PutFishUseCase
@@ -15,7 +16,8 @@ import reactor.core.publisher.Mono
 open class FishController(
     private val fishCreateUseCase: FishCreateUseCase,
     private val fishingUseCase: FishingUseCase,
-    private val fishPutFishUseCase: PutFishUseCase
+    private val fishPutFishUseCase: PutFishUseCase,
+    private val eatFishUseCase: EatFishUseCase
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -85,9 +87,18 @@ open class FishController(
     fun fishEat(
         @RequestHeader("access_token") accessToken: String,
         @RequestBody fishRequest: FishRequest
-    ): Mono<RWResult<String>> {
+    ): Mono<RWResult<Nothing>> {
         // TODO 吃鱼
-        return Mono.empty()
+        return eatFishUseCase.runCase(accessToken, fishRequest.fishId)
+            .filter { it }
+            .map {
+                RWResult.success("成功", null)
+            }
+            .onErrorResume {
+                log.error("eat error", it)
+                Mono.just(RWResult.failed("失败", null))
+            }
+            .defaultIfEmpty(RWResult.failed("失败", null))
     }
 
 }

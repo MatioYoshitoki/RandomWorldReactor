@@ -12,7 +12,11 @@ interface UserFishRepository {
 
     fun bindFish(userId: Long, fishId: Long): Mono<UserFish>
 
+    fun deleteOne(fishId: Long): Mono<Int>
+
     fun findFishOwner(fishId: Long): Mono<Long>
+
+    fun findOne(fishId: Long): Mono<UserFish>
 
     fun poolFishCount(userId: Long): Mono<Long>
 
@@ -27,15 +31,24 @@ open class UserFishRepositoryImpl(
             .using(UserFish(userId, fishId, BeingStatus.ALIVE.ordinal))
     }
 
+    override fun deleteOne(fishId: Long): Mono<Int> {
+        return entityTemplate.delete(Query.query(where("fish_id").`is`(fishId)), UserFish::class.java)
+
+    }
+
     override fun findFishOwner(fishId: Long): Mono<Long> {
+        return findOne(fishId)
+            .map {
+                it.userId
+            }
+    }
+
+    override fun findOne(fishId: Long): Mono<UserFish> {
         return entityTemplate.selectOne(
             Query.query(
                 where("fish_id").`is`(fishId)
             ), UserFish::class.java
         )
-            .map {
-                it.userId
-            }
     }
 
     override fun poolFishCount(userId: Long): Mono<Long> {

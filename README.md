@@ -1,12 +1,12 @@
 # Random World
 ### API
 1. register
-2. login
+2. login √
 3. logout
 4. signIn
-5. createFish
-6. putFish
-7. fishing
+5. createFish √
+6. putFish √
+7. fishing √
 8. eatFish
 9. fishMarketList
 10. buyFish
