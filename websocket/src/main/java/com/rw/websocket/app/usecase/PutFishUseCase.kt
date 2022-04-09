@@ -1,6 +1,7 @@
 package com.rw.websocket.app.usecase
 
 import com.rw.random.common.dto.RWResult
+import com.rw.websocket.app.service.FishService
 import com.rw.websocket.domain.dto.request.FishRequest
 import com.rw.websocket.domain.repository.UserFishRepository
 import com.rw.websocket.domain.repository.UserRepository
@@ -19,20 +20,14 @@ interface PutFishUseCase {
 @Component
 open class PutFishUseCaseImpl(
     private val applicationProperties: ApplicationProperties,
-    private val userRepository: UserRepository,
-    private val userFishRepository: UserFishRepository
+    private val fishService: FishService
 ) : PutFishUseCase {
 
     private val webClient = WebClient.create()
 
     override fun runCase(accessToken: String, fishId: Long): Mono<Long> {
-        return userRepository.findUserWithPropertyByToken(accessToken)
-            .flatMap { user ->
-                userFishRepository.findFishOwner(fishId)
-                    .filter {
-                        it == user.userId
-                    }
-            }
+        return fishService.checkFishOwner(fishId, accessToken)
+            .filter { it }
             .flatMap {
                 requestCoreObjOut(fishId)
                     .map {

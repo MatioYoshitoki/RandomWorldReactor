@@ -1,9 +1,8 @@
 package com.rw.websocket.app.usecase
 
+import com.rw.websocket.app.service.FishService
+import com.rw.websocket.app.service.UserService
 import com.rw.websocket.domain.dto.request.FishDetails
-import com.rw.websocket.domain.repository.FishRepository
-import com.rw.websocket.domain.repository.UserFishRepository
-import com.rw.websocket.domain.repository.UserRepository
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 
@@ -15,19 +14,18 @@ interface FishDetailsUseCase {
 
 @Component
 open class FishDetailsUseCaseImpl(
-    private val fishRepository: FishRepository,
-    private val userRepository: UserRepository,
-    private val userFishRepository: UserFishRepository
+    private val fishService: FishService,
+    private val userService: UserService,
 ) : FishDetailsUseCase {
     override fun runCase(accessToken: String, fishId: Long?): Mono<List<FishDetails>> {
-        return userRepository.findUserWithPropertyByToken(accessToken)
+        return userService.getUserWithPropertyByAccessToken(accessToken)
             .flatMap { user ->
-                userFishRepository.findAll(user.userId)
+                userService.getAllFish(user.userId)
                     .filter {
                         it.fishId == fishId
                     }
                     .flatMap {
-                        fishRepository.findOne(it.fishId)
+                        fishService.getFishDetail(it.fishId)
                     }
                     .collectList()
             }

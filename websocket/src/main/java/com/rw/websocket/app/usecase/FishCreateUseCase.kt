@@ -1,8 +1,7 @@
 package com.rw.websocket.app.usecase
 
 import com.rw.random.common.dto.RWResult
-import com.rw.websocket.domain.repository.UserFishRepository
-import com.rw.websocket.domain.repository.UserRepository
+import com.rw.websocket.app.service.UserService
 import com.rw.websocket.domain.service.MoneyChangeService
 import com.rw.websocket.infre.config.ApplicationProperties
 import com.rw.websocket.infre.exception.EnterFishException
@@ -17,18 +16,18 @@ interface FishCreateUseCase {
 
 @Component
 open class FishCreateUseCaseImpl(
-    private val userFishRepository: UserFishRepository,
-    private val userRepository: UserRepository,
     private val applicationProperties: ApplicationProperties,
-    private val moneyChangeService: MoneyChangeService
+    private val moneyChangeService: MoneyChangeService,
+    private val userService: UserService,
 ) : FishCreateUseCase {
 
     private val webClient = WebClient.create()
 
     override fun runCase(accessToken: String): Mono<Long> {
-        return userRepository.findUserWithPropertyByToken(accessToken)
+        return userService.getUserWithPropertyByAccessToken(accessToken)
             .delayUntil { user ->
-                userFishRepository.poolFishCount(user.userId)
+                userService.getAllFish(user.userId)
+                    .count()
                     .flatMap {
                         if (user.fishMaxCount <= it) {
                             Mono.error(EnterFishException("拥有的鱼达到上限！"))
@@ -45,27 +44,30 @@ open class FishCreateUseCaseImpl(
                 }
             }
             .flatMap { user ->
-                val userId = user.userId
-                moneyChangeService.expendMoney(userId, applicationProperties.newFishPrice)
-                    .flatMap { enoughMoney ->
-                        if (!enoughMoney) {
-                            Mono.error(EnterFishException("${applicationProperties.moneyName}不足！"))
-                        } else {
-                            requestCoreObjEnter()
-                                .flatMap { result ->
-                                    if (result.errno == 0) {
-                                        val fishId = result.data.toString().toLong()
-                                        userFishRepository.bindFish(userId, fishId)
-                                            .map { fishId }
-                                    } else {
-                                        moneyChangeService.earnMoney(userId, applicationProperties.newFishPrice)
-                                            .flatMap {
-                                                Mono.error(EnterFishException(result.message))
-                                            }
+                expendMoney(user.userId)
+            }
+    }
+
+    private fun expendMoney(userId: Long): Mono<Long> {
+        return moneyChangeService.expendMoney(userId, applicationProperties.newFishPrice)
+            .flatMap { enoughMoney ->
+                if (!enoughMoney) {
+                    Mono.error(EnterFishException("${applicationProperties.moneyName}不足！"))
+                } else {
+                    requestCoreObjEnter()
+                        .flatMap { result ->
+                            if (result.errno == 0) {
+                                val fishId = result.data.toString().toLong()
+                                userService.bindUserFish(userId, fishId)
+                                    .map { fishId }
+                            } else {
+                                moneyChangeService.earnMoney(userId, applicationProperties.newFishPrice)
+                                    .flatMap {
+                                        Mono.error(EnterFishException(result.message))
                                     }
-                                }
+                            }
                         }
-                    }
+                }
             }
     }
 

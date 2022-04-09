@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono
 
 interface UserFishRepository {
 
-    fun bindFish(userId: Long, fishId: Long): Mono<UserFish>
+    fun addOne(userId: Long, fishId: Long): Mono<UserFish>
 
     fun deleteOne(fishId: Long): Mono<Int>
 
@@ -20,16 +20,13 @@ interface UserFishRepository {
     fun findOne(fishId: Long): Mono<UserFish>
 
     fun findAll(userId: Long): Flux<UserFish>
-
-    fun poolFishCount(userId: Long): Mono<Long>
-
 }
 
 @Component
 open class UserFishRepositoryImpl(
     private val entityTemplate: R2dbcEntityTemplate
 ) : UserFishRepository {
-    override fun bindFish(userId: Long, fishId: Long): Mono<UserFish> {
+    override fun addOne(userId: Long, fishId: Long): Mono<UserFish> {
         return entityTemplate.insert(UserFish::class.java)
             .using(UserFish(userId, fishId, BeingStatus.ALIVE.ordinal))
     }
@@ -58,9 +55,4 @@ open class UserFishRepositoryImpl(
         return entityTemplate.select(Query.query(where("user_id").`is`(userId)), UserFish::class.java)
     }
 
-    override fun poolFishCount(userId: Long): Mono<Long> {
-        return entityTemplate.select(
-            Query.query(where("user_id").`is`(userId)), UserFish::class.java
-        ).count()
-    }
 }

@@ -19,26 +19,21 @@ interface UserRepository {
 
     fun findOneByUserName(userName: String): Mono<User>
 
-    fun updateAccessToken(userId: Long, accessToken: String): Mono<UserWithProperty>
+    fun updateAccessToken(userId: Long, accessToken: String): Mono<Int>
 
-    fun findAccessTokenByUserId(userId: Long): Mono<String>
-
-    fun findUserWithPropertyByToken(accessToken: String): Mono<UserWithProperty>
-
-    fun updateUserWithProperty(accessToken: String, update: Map<String, String>): Mono<Boolean>
+    fun findUserWithPropertyFromDB(userId: Long): Mono<MutableMap<String, String>>
 
 }
 
 @Component
 open class UserRepositoryImpl(
     private val entityTemplate: R2dbcEntityTemplate,
-    private val redisTemplate: ReactiveStringRedisTemplate,
     private val snowflake: Snowflake,
 ) : UserRepository {
+
     override fun addOne(userName: String, password: String): Mono<User> {
         return entityTemplate.insert(User(snowflake.nextId(), userName, password, null))
     }
-
 
     override fun findOneByUserName(userName: String): Mono<User> {
         return entityTemplate.select(User::class.java)
@@ -54,77 +49,15 @@ open class UserRepositoryImpl(
             .first()
     }
 
-    override fun updateAccessToken(userId: Long, accessToken: String): Mono<UserWithProperty> {
+    override fun updateAccessToken(userId: Long, accessToken: String): Mono<Int> {
         return entityTemplate.update(
             Query.query(where("id").`is`(userId)),
             Update.update("access_token", accessToken),
             User::class.java
         )
-            .filter { it >= 1 }
-            .delayUntil {
-                redisTemplate.opsForValue()
-                    .set(getUserAccessTokenKey(userId), accessToken)
-            }
-            .flatMap {
-                findUserWithPropertyFromDB(userId)
-                    .delayUntil {
-                        redisTemplate.opsForHash<String, String>()
-                            .putAll(getAccessTokenUserKey(accessToken), it)
-                    }
-                    .map {
-                        UserWithProperty(
-                            userId,
-                            it[UserWithProperty.USER_NAME_FIELD]!!,
-                            accessToken,
-                            it[UserWithProperty.EXP_FIELD]?.toLong() ?: 0,
-                            it[UserWithProperty.MONEY_FIELD]?.toLong() ?: 0,
-                            it[UserWithProperty.FISH_MAX_COUNT_FIELD]?.toLong() ?: 0
-                        )
-                    }
-            }
-
     }
 
-    override fun findAccessTokenByUserId(userId: Long): Mono<String> {
-        return redisTemplate.opsForValue()
-            .get(getUserAccessTokenKey(userId))
-    }
-
-    override fun findUserWithPropertyByToken(accessToken: String): Mono<UserWithProperty> {
-        return redisTemplate.opsForHash<String, String>()
-            .entries(getAccessTokenUserKey(accessToken))
-            .collectList()
-            .map { list ->
-                println(list)
-                list.associate { Pair(it.key, it.value) }
-            }
-            .filter { it.containsKey(UserWithProperty.USER_ID_FIELD) && it.containsKey(UserWithProperty.ACCESS_TOKEN_FIELD) }
-            .map {
-                UserWithProperty(
-                    it[UserWithProperty.USER_ID_FIELD]!!.toLong(),
-                    it[UserWithProperty.USER_NAME_FIELD] ?: "",
-                    it[UserWithProperty.ACCESS_TOKEN_FIELD]!!,
-                    it[UserWithProperty.EXP_FIELD]?.toLong() ?: 0L,
-                    it[UserWithProperty.MONEY_FIELD]?.toLong() ?: 0L,
-                    it[UserWithProperty.FISH_MAX_COUNT_FIELD]?.toLong() ?: 1L
-                )
-            }
-    }
-
-    override fun updateUserWithProperty(accessToken: String, update: Map<String, String>): Mono<Boolean> {
-        return redisTemplate.opsForHash<String, String>()
-            .putAll(getAccessTokenUserKey(accessToken), update)
-    }
-
-    private fun getUserAccessTokenKey(userId: Long): String {
-        return RedisKeyConstants.USER_ACCESS_TOKEN + userId
-    }
-
-    private fun getAccessTokenUserKey(token: String): String {
-        return RedisKeyConstants.ACCESS_TOKEN_USER + token
-    }
-
-    private fun findUserWithPropertyFromDB(userId: Long): Mono<MutableMap<String, String>> {
+    override fun findUserWithPropertyFromDB(userId: Long): Mono<MutableMap<String, String>> {
         return entityTemplate.databaseClient
             .sql(
                 """

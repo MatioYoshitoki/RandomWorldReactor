@@ -3,6 +3,8 @@ package com.rw.websocket.domain.service
 import com.rw.websocket.domain.entity.UserWithProperty
 import com.rw.websocket.domain.repository.UserPropertyRepository
 import com.rw.websocket.domain.repository.UserRepository
+import com.rw.websocket.domain.repository.redis.AccessTokenUserRepository
+import com.rw.websocket.domain.repository.redis.UserAccessTokenRepository
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
 import java.util.concurrent.locks.ReentrantLock
@@ -18,7 +20,9 @@ interface MoneyChangeService {
 @Service
 open class MoneyChangeServiceImpl(
     private val userPropertyRepository: UserPropertyRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val accessTokenRepository: AccessTokenUserRepository,
+    private val userAccessTokenRepository: UserAccessTokenRepository,
 ) : MoneyChangeService {
 
     private val lock: ReentrantLock = ReentrantLock()
@@ -32,9 +36,9 @@ open class MoneyChangeServiceImpl(
                 userPropertyRepository.updateMoney(userId, it.money!! - money)
             }
             .flatMap {
-                userRepository.findAccessTokenByUserId(userId)
+                userAccessTokenRepository.findOne(userId)
                     .flatMap { accessToken ->
-                        userRepository.updateUserWithProperty(
+                        accessTokenRepository.addAll(
                             accessToken,
                             mapOf(UserWithProperty.MONEY_FIELD to (it.money!! - money).toString())
                         )
@@ -50,9 +54,9 @@ open class MoneyChangeServiceImpl(
                 userPropertyRepository.updateMoney(userId, it.money!! + money)
             }
             .flatMap {
-                userRepository.findAccessTokenByUserId(userId)
+                userAccessTokenRepository.findOne(userId)
                     .flatMap { accessToken ->
-                        userRepository.updateUserWithProperty(
+                        accessTokenRepository.addAll(
                             accessToken,
                             mapOf(UserWithProperty.MONEY_FIELD to (it.money!! + money).toString())
                         )
