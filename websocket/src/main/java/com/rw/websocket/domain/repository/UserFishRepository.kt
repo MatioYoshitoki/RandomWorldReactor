@@ -6,6 +6,7 @@ import org.springframework.data.r2dbc.core.R2dbcEntityTemplate
 import org.springframework.data.r2dbc.query.Criteria.where
 import org.springframework.data.relational.core.query.Query
 import org.springframework.stereotype.Component
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 interface UserFishRepository {
@@ -17,6 +18,8 @@ interface UserFishRepository {
     fun findFishOwner(fishId: Long): Mono<Long>
 
     fun findOne(fishId: Long): Mono<UserFish>
+
+    fun findAll(userId: Long): Flux<UserFish>
 
     fun poolFishCount(userId: Long): Mono<Long>
 
@@ -49,6 +52,10 @@ open class UserFishRepositoryImpl(
                 where("fish_id").`is`(fishId)
             ), UserFish::class.java
         )
+    }
+
+    override fun findAll(userId: Long): Flux<UserFish> {
+        return entityTemplate.select(Query.query(where("user_id").`is`(userId)), UserFish::class.java)
     }
 
     override fun poolFishCount(userId: Long): Mono<Long> {

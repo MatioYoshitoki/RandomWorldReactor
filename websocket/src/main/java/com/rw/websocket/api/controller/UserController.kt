@@ -2,6 +2,7 @@ package com.rw.websocket.api.controller
 
 import com.rw.random.common.dto.RWResult
 import com.rw.websocket.app.usecase.LoginUseCase
+import com.rw.websocket.app.usecase.RegisterUseCase
 import com.rw.websocket.domain.dto.request.LoginRequest
 import com.rw.websocket.domain.dto.request.RegisterRequest
 import com.rw.websocket.domain.entity.UserWithProperty
@@ -16,15 +17,24 @@ import reactor.core.publisher.Mono
 @RestController
 @RequestMapping("/api/v1/user")
 open class UserController(
-    private val loginUseCase: LoginUseCase
+    private val loginUseCase: LoginUseCase,
+    private val registerUseCase: RegisterUseCase,
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     @PostMapping("/register")
-    fun register(@RequestBody registerRequest: RegisterRequest): Mono<RWResult<String>> {
+    fun register(@RequestBody registerRequest: RegisterRequest): Mono<RWResult<UserWithProperty>> {
         // TODO 注册
-        return Mono.empty()
+        return registerUseCase.runCase(registerRequest)
+            .map {
+                RWResult.success("success", it)
+            }
+            .onErrorResume {
+                log.error("register error", it)
+                Mono.just(RWResult.failed(it.message ?: "", null))
+            }
+            .defaultIfEmpty(RWResult.failed("未知错误", null))
     }
 
     @PostMapping("/login")

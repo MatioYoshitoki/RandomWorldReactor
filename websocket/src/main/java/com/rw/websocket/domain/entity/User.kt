@@ -10,5 +10,5 @@ open class User(
     val userName: String,
     val password: String,
     @Column("access_token")
-    val accessToken: String,
+    val accessToken: String?,
 )

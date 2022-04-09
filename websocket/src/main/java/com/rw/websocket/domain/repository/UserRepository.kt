@@ -1,5 +1,6 @@
 package com.rw.websocket.domain.repository
 
+import cn.hutool.core.lang.Snowflake
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.rw.random.common.constants.RedisKeyConstants
 import com.rw.websocket.domain.entity.User
@@ -13,6 +14,8 @@ import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 
 interface UserRepository {
+
+    fun addOne(userName: String, password: String): Mono<User>
 
     fun findOneByUserName(userName: String): Mono<User>
 
@@ -30,8 +33,11 @@ interface UserRepository {
 open class UserRepositoryImpl(
     private val entityTemplate: R2dbcEntityTemplate,
     private val redisTemplate: ReactiveStringRedisTemplate,
-    private val objectMapper: ObjectMapper
+    private val snowflake: Snowflake,
 ) : UserRepository {
+    override fun addOne(userName: String, password: String): Mono<User> {
+        return entityTemplate.insert(User(snowflake.nextId(), userName, password, null))
+    }
 
 
     override fun findOneByUserName(userName: String): Mono<User> {

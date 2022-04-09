@@ -10,6 +10,8 @@ import reactor.core.publisher.Mono
 
 interface UserPropertyRepository {
 
+    fun addOne(userId: Long): Mono<UserProperty>
+
     fun findOne(userId: Long): Mono<UserProperty>
 
     fun updateMoney(userId: Long, money: Long): Mono<Boolean>
@@ -22,6 +24,10 @@ interface UserPropertyRepository {
 open class UserPropertyRepositoryImpl(
     private val entityTemplate: R2dbcEntityTemplate
 ) : UserPropertyRepository {
+    override fun addOne(userId: Long): Mono<UserProperty> {
+        return entityTemplate.insert(UserProperty(id = userId))
+    }
+
     override fun findOne(userId: Long): Mono<UserProperty> {
         return entityTemplate.selectOne(Query.query(where("id").`is`(userId)), UserProperty::class.java)
     }
