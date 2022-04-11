@@ -1,5 +1,8 @@
 package com.rw.websocket.app.service
 
+import cn.hutool.core.date.DatePattern
+import cn.hutool.core.date.DateUnit
+import cn.hutool.core.date.DateUtil
 import cn.hutool.core.lang.Snowflake
 import cn.hutool.crypto.SecureUtil
 import com.rw.random.common.entity.UserFish
@@ -11,12 +14,14 @@ import com.rw.websocket.domain.repository.UserPropertyRepository
 import com.rw.websocket.domain.repository.UserRepository
 import com.rw.websocket.domain.repository.redis.AccessTokenUserRepository
 import com.rw.websocket.domain.repository.redis.UserAccessTokenRepository
+import com.rw.websocket.domain.repository.redis.UserSignInRepository
 import com.rw.websocket.infre.exception.RegisterException
 import com.rw.websocket.infre.utils.FishWeight2ExpUtil.exchangeWeight2Exp
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.switchIfEmpty
+import java.util.*
 
 interface UserService {
 
@@ -36,6 +41,10 @@ interface UserService {
 
     fun getUserFish(fishId: Long): Mono<UserFish>
 
+    fun logout(accessToken: String): Mono<Void>
+
+    fun signIn(accessToken: String): Mono<Boolean>
+
 }
 
 @Component
@@ -46,6 +55,7 @@ open class UserServiceImpl(
     private val accessTokenUserRepository: AccessTokenUserRepository,
     private val userFishRepository: UserFishRepository,
     private val fishRepository: FishRepository,
+    private val userSignInRepository: UserSignInRepository,
     private val snowflake: Snowflake
 ) : UserService {
     override fun eatFish(fishId: Long, userId: Long, accessToken: String): Mono<Boolean> {
@@ -130,6 +140,42 @@ open class UserServiceImpl(
 
     override fun getUserFish(fishId: Long): Mono<UserFish> {
         return userFishRepository.findOne(fishId)
+    }
+
+    override fun logout(accessToken: String): Mono<Void> {
+        return accessTokenUserRepository.findOneUserProperty(accessToken)
+            .flatMap {
+                accessTokenUserRepository.removeOne(accessToken)
+                    .then(userAccessTokenRepository.removeOne(it.userId))
+            }
+    }
+
+    override fun signIn(accessToken: String): Mono<Boolean> {
+        return getUserWithPropertyByAccessToken(accessToken)
+            .flatMap {
+                val userId = it.userId
+                val date = DatePattern.PURE_DATE_FORMAT.format(Date())
+                userSignInRepository.exist(userId, date)
+                    .flatMap { exist ->
+                        if (!exist) {
+                            userPropertyRepository.findOne(userId)
+                                .flatMap { property ->
+                                    userPropertyRepository.updateMoney(userId, property.money!! + 5000)
+                                        .flatMap {
+                                            accessTokenUserRepository.addAll(
+                                                accessToken,
+                                                mapOf("money" to (property.money!! + 5000).toString())
+                                            )
+                                        }
+                                }
+                                .delayUntil {
+                                    userSignInRepository.addOne(userId, date)
+                                }
+                        } else {
+                            Mono.just(exist)
+                        }
+                    }
+            }
     }
 
     private fun userNameExist(userName: String): Mono<Boolean> {

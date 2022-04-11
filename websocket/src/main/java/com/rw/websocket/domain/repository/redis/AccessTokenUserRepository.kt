@@ -12,6 +12,8 @@ interface AccessTokenUserRepository {
 
     fun addAll(accessToken: String, map: Map<String, String>): Mono<Boolean>
 
+    fun removeOne(accessToken: String): Mono<Void>
+
 }
 
 @Component
@@ -41,6 +43,12 @@ open class AccessTokenUserRepositoryImpl(
     override fun addAll(accessToken: String, map: Map<String, String>): Mono<Boolean> {
         return redisTemplate.opsForHash<String, String>()
             .putAll(getKey(accessToken), map)
+    }
+
+    override fun removeOne(accessToken: String): Mono<Void> {
+        return redisTemplate.opsForHash<String, String>()
+            .delete(getKey(accessToken))
+            .then()
     }
 
     private fun getKey(accessToken: String): String {

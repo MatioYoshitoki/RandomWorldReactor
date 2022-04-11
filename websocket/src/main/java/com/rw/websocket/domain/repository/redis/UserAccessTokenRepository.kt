@@ -11,6 +11,7 @@ interface UserAccessTokenRepository {
 
     fun addOne(userId: Long, accessToken: String): Mono<Boolean>
 
+    fun removeOne(userId: Long): Mono<Void>
 }
 
 @Component
@@ -25,6 +26,12 @@ open class UserAccessTokenRepositoryImpl(
     override fun addOne(userId: Long, accessToken: String): Mono<Boolean> {
         return redisTemplate.opsForValue()
             .set(getKey(userId), accessToken)
+    }
+
+    override fun removeOne(userId: Long): Mono<Void> {
+        return redisTemplate.opsForValue()
+            .delete(getKey(userId))
+            .then()
     }
 
     private fun getKey(userId: Long): String {

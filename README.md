@@ -1,22 +1,22 @@
 # Random World
 ### API
-1. register
+1. register √
 2. login √
-3. logout
-4. signIn
-5. createFish √
-6. putFish √
-7. fishing √
-8. eatFish
-9. fishMarketList
-10. buyFish
-11. sellFish
-12. cancelSellFish
-13. changeFishPrice
-14. sellFishList
-15. expandPackage
-16. fishList
-17. fishDetail
+3. logout √
+4. signIn √
+5. fishList √
+6. createFish √
+7. putFish √
+8. fishing √
+9. eatFish √
+10. fishMarketList
+11. buyFish
+12. sellFish
+13. cancelSellFish
+14. changeFishPrice
+15. sellFishList
+16. expandPackage
+
 
 ### Websocket Message
 1. ATK Message (ALL)

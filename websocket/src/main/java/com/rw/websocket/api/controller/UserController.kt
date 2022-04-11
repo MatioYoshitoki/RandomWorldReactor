@@ -2,7 +2,9 @@ package com.rw.websocket.api.controller
 
 import com.rw.random.common.dto.RWResult
 import com.rw.websocket.app.usecase.LoginUseCase
+import com.rw.websocket.app.usecase.LogoutUseCase
 import com.rw.websocket.app.usecase.RegisterUseCase
+import com.rw.websocket.app.usecase.SignInUseCase
 import com.rw.websocket.domain.dto.request.LoginRequest
 import com.rw.websocket.domain.dto.request.RegisterRequest
 import com.rw.websocket.domain.entity.UserWithProperty
@@ -19,6 +21,8 @@ import reactor.core.publisher.Mono
 open class UserController(
     private val loginUseCase: LoginUseCase,
     private val registerUseCase: RegisterUseCase,
+    private val logoutUseCase: LogoutUseCase,
+    private val signInUseCase: SignInUseCase
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -51,15 +55,28 @@ open class UserController(
     }
 
     @PostMapping("/logout")
-    fun logout(@RequestHeader("access_token") accessToken: String): Mono<RWResult<String>> {
-        // TODO 登出
-        return Mono.empty()
+    fun logout(@RequestHeader("access_token") accessToken: String): Mono<RWResult<Void>> {
+        // 登出
+        return logoutUseCase.runCase(accessToken)
+            .thenReturn(RWResult.success("成功", null))
     }
 
     @PostMapping("/signIn")
-    fun signIn(@RequestHeader("access_token") accessToken: String): Mono<RWResult<String>> {
-        // TODO 签到
-        return Mono.empty()
+    fun signIn(@RequestHeader("access_token") accessToken: String): Mono<RWResult<Boolean>> {
+        // 签到
+        return signInUseCase.runCase(accessToken)
+            .map {
+                if (it) {
+                    RWResult.success("签到成功", it)
+                } else {
+                    RWResult.failed("今日已签到", it)
+                }
+            }
+            .defaultIfEmpty(RWResult.failed("今日已签到", false))
+            .onErrorResume {
+                log.error("sign in error", it)
+                Mono.just(RWResult.failed("今日已签到", false))
+            }
     }
 
 
