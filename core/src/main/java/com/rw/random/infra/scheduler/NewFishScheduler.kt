@@ -5,6 +5,7 @@ import cn.hutool.core.util.RandomUtil
 import com.rw.random.domain.entity.RWPersonality
 import com.rw.random.domain.entity.RWZone
 import com.rw.random.domain.entity.obj.Fish
+import com.rw.random.infra.config.ApplicationProperties
 import com.rw.random.infra.config.TaskProperties
 import com.rw.random.infra.handler.TaskHandler
 import com.rw.random.infra.handler.WorldMessageDispatchHandler
@@ -19,15 +20,16 @@ open class NewFishScheduler(
     private val zone: RWZone,
     private val snowflake: Snowflake,
     private val taskHandler: TaskHandler,
-    private val taskProperties: TaskProperties
+    private val taskProperties: TaskProperties,
+    private val applicationProperties: ApplicationProperties,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-//    @Scheduled(fixedDelay = 1_000, initialDelay = 3_000)
+    @Scheduled(fixedDelay = 1_000, initialDelay = 3_000)
     fun doTask() {
         val count = zone.getAllObjByType(Fish::class).count()
         log.info("当前数量: $count")
-        if (count >= 100) {
+        if (count >= applicationProperties.loadTestFishCount) {
             return
         }
         val randomLength = RandomUtil.randomInt(2, 4)

@@ -15,6 +15,7 @@ spring:
 
 
 random-world:
+  load-test-fish-count: 500
   objects:
     AA:
       topic: "/topic/762136123"

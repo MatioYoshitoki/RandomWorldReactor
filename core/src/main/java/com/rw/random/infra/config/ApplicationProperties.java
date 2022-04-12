@@ -10,6 +10,8 @@ public class ApplicationProperties {
 
     private Long workId = 1L;
 
+    private Long loadTestFishCount = 500L;
+
     private Long dataCenterId = 1L;
 
     private Map<String, ObjectInitProperties> objects = new HashMap<>();
@@ -36,6 +38,14 @@ public class ApplicationProperties {
 
     public void setDataCenterId(Long dataCenterId) {
         this.dataCenterId = dataCenterId;
+    }
+
+    public Long getLoadTestFishCount() {
+        return loadTestFishCount;
+    }
+
+    public void setLoadTestFishCount(Long loadTestFishCount) {
+        this.loadTestFishCount = loadTestFishCount;
     }
 
     public static class ObjectInitProperties {
