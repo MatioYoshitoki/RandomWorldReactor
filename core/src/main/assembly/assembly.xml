@@ -1,0 +1,55 @@
+<assembly>
+    <id>assembly</id>
+    <formats>
+        <format>zip</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+
+    <fileSets>
+        <fileSet>
+            <directory>${project.parent.basedir}</directory>
+            <outputDirectory>/</outputDirectory>
+            <includes>
+                <include>README*</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>
+                ${project.basedir}/src/main/scripts/config
+            </directory>
+            <outputDirectory>config</outputDirectory>
+            <includes>
+                <include>application.yml.template</include>
+                <include>bootstrap.yml.template</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>
+                ${project.basedir}/src/main/scripts/bin
+            </directory>
+            <outputDirectory>bin</outputDirectory>
+            <excludes>
+                <exclude>upgrade/**</exclude>
+                <exclude>upgrade.*</exclude>
+                <exclude>upgrade-*</exclude>
+            </excludes>
+        </fileSet>
+    </fileSets>
+
+    <files>
+        <file>
+            <source>target/${project.artifactId}-${project.version}.jar</source>
+            <outputDirectory>lib</outputDirectory>
+        </file>
+    </files>
+
+    <dependencySets>
+        <dependencySet>
+            <outputDirectory>lib</outputDirectory>
+            <useTransitiveDependencies>true</useTransitiveDependencies>
+            <unpack>false</unpack>
+            <scope>runtime</scope>
+            <useProjectArtifact>true</useProjectArtifact>
+        </dependencySet>
+    </dependencySets>
+</assembly>

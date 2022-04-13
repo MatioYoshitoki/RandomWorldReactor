@@ -28,7 +28,8 @@ open class ApplicationConfiguration(
             zoneProperties.zoneName,
             zoneProperties.zoneMoney,
             zoneProperties.zoneMoneyIncrSpeed,
-            subscriptionRegistry
+            subscriptionRegistry,
+            zoneProperties.maxObjSize
         )
         subscriptionRegistry.registerZone(zone)
         return zone

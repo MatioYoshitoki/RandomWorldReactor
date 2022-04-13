@@ -43,8 +43,9 @@ open class SimpleZone(
     zoneName: String,
     money: Long,
     moneyIncrSpeed: Long,
-    private val subscriptionRegistry: SubscriptionRegistry
-) : RWZone(zoneId, zoneName, money = money, moneyIncrSpeed = moneyIncrSpeed) {
+    private val subscriptionRegistry: SubscriptionRegistry,
+    maxObjSize: Long,
+) : RWZone(zoneId, zoneName, money = money, moneyIncrSpeed = moneyIncrSpeed, maxObjSize = maxObjSize) {
 
     override fun enterZone(obj: RWObject): Boolean {
         if (objSet.size >= maxObjSize) {
