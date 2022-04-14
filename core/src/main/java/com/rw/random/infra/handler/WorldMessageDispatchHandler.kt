@@ -30,7 +30,7 @@ open class WorldMessageDispatchHandler(
 ) : SmartLifecycle, ApplicationEventPublisherAware {
 
     open val worldChannel: Sinks.Many<RWEvent> =
-        Sinks.many().unicast().onBackpressureBuffer(Queues.get<RWEvent>(512).get())
+        Sinks.many().unicast().onBackpressureBuffer(Queues.get<RWEvent>(2048).get())
     private var running: Boolean = false
     private val log = LoggerFactory.getLogger(javaClass)
 
