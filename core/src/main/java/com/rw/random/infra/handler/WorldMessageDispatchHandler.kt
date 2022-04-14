@@ -29,8 +29,9 @@ open class WorldMessageDispatchHandler(
     private val applicationProperties: ApplicationProperties,
 ) : SmartLifecycle, ApplicationEventPublisherAware {
 
+    // 此处的队列大小与池中鱼的数量密切相关需要保证1:1的比例
     open val worldChannel: Sinks.Many<RWEvent> =
-        Sinks.many().unicast().onBackpressureBuffer(Queues.get<RWEvent>(2048).get())
+        Sinks.many().unicast().onBackpressureBuffer(Queues.get<RWEvent>(applicationProperties.eventChannelSize).get())
     private var running: Boolean = false
     private val log = LoggerFactory.getLogger(javaClass)
 

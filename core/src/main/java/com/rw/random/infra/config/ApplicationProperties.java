@@ -10,6 +10,7 @@ import java.util.Map;
 @ConfigurationProperties("random-world")
 public class ApplicationProperties {
 
+    private Integer eventChannelSize = 4096;
     private Long workId = 1L;
 
     private Long loadTestFishCount = 1000L;
@@ -58,6 +59,14 @@ public class ApplicationProperties {
 
     public void setMessageTypeNeedToSend(List<String> messageTypeNeedToSend) {
         this.messageTypeNeedToSend = messageTypeNeedToSend;
+    }
+
+    public Integer getEventChannelSize() {
+        return eventChannelSize;
+    }
+
+    public void setEventChannelSize(Integer eventChannelSize) {
+        this.eventChannelSize = eventChannelSize;
     }
 
     public static class ObjectInitProperties {
