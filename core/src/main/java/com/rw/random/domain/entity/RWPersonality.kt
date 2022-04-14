@@ -184,12 +184,16 @@ open class RWPersonality(
         this.eventBehavior = personalityMap
     }
 
-    fun randomTask(event: RWEvent, obj: Being): RWTask? {
+    fun randomTask(event: RWEvent, obj: Being, excludeTask: Set<KClass<out RWTask>>): RWTask? {
         val taskBehavior = eventBehavior[event::class]!!
-        val rate: Int = RandomUtil.randomInt(10000)
+        var rate: Int = RandomUtil.randomInt(10000)
         var klazz: KClass<out RWTask>? = null
         for (entry in taskBehavior) {
             if (rate <= entry.key) {
+                if (excludeTask.contains(entry.value)) {
+                    rate += entry.key
+                    continue
+                }
                 klazz = entry.value
                 break
             }

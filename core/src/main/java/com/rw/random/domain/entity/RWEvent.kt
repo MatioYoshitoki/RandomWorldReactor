@@ -123,7 +123,7 @@ open class StayEvent(
 open class EarnEvent(
     eventId: Long,
     eventType: String,
-    val amount: Int,
+    val amount: Long,
     topic: String,
     target: RWObject,
 ) : RWEvent(eventId, eventType, topic, null, target)

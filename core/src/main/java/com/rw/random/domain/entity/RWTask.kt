@@ -143,7 +143,7 @@ open class EarnTask(
             EarnEvent(
                 System.currentTimeMillis(),
                 "Earn",
-                earnSpeed + (Math.random() * 100).toInt(),
+                earnSpeed + (Math.random() * 100).toLong(),
                 source.topic,
                 source,
             )

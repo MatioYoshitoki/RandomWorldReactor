@@ -23,7 +23,7 @@ open class Being(
     sound: Sinks.Many<RWEvent>?,
     taskChannel: Sinks.Many<RWTask>?,
     var earnSpeed: Int = 30,
-    var money: Int = (Math.random() * 200).toInt(),
+    var money: Long = (Math.random() * 200).toLong(),
     var status: BeingStatus = BeingStatus.ALIVE
 ) : RWObject(
     id, name, hasMaster, taskProperties, sound, taskChannel
@@ -85,28 +85,18 @@ open class Being(
 
 
     open fun eventBack(event: RWEvent) {
-        var task = nextTask(event)
-        for (i in 0..10) {
-            if (task == null) {
-                break
-            }
-            if (taskCountDownMap.containsKey(task::class)) {
-                if ((taskCountDownMap[task::class]!! + (taskProperties.countDown[task::class.simpleName]
-                        ?: 0)) < System.currentTimeMillis()
-                ) {
-                    break
-                } else {
-                    task = nextTask(event)
-                }
-            }
-        }
+        val currentTime = System.currentTimeMillis()
+        val excludeTask = taskCountDownMap.filter {
+            it.value + (taskProperties.countDown[it.key.simpleName] ?: 0) < currentTime
+        }.keys
+        val task = nextTask(event, excludeTask)
         if (task != null) {
             taskCountDownMap[task::class] = System.currentTimeMillis()
             pushTask(task)
         }
     }
 
-    open fun nextTask(event: RWEvent): RWTask? {
+    open fun nextTask(event: RWEvent, excludeTask: Set<KClass<out RWTask>>): RWTask? {
         val rate = Math.random()
         return when (event) {
             is ATKEvent -> {

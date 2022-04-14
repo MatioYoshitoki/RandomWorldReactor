@@ -2,7 +2,9 @@ package com.rw.random.infra.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @ConfigurationProperties("random-world")
@@ -10,7 +12,7 @@ public class ApplicationProperties {
 
     private Long workId = 1L;
 
-    private Long loadTestFishCount = 500L;
+    private Long loadTestFishCount = 1000L;
 
     private Long dataCenterId = 1L;
 
@@ -19,6 +21,8 @@ public class ApplicationProperties {
     public Map<String, ObjectInitProperties> getObjects() {
         return objects;
     }
+
+    public List<String> messageTypeNeedToSend = Arrays.asList("BeAtk");
 
     public void setObjects(Map<String, ObjectInitProperties> objects) {
         this.objects = objects;
@@ -46,6 +50,14 @@ public class ApplicationProperties {
 
     public void setLoadTestFishCount(Long loadTestFishCount) {
         this.loadTestFishCount = loadTestFishCount;
+    }
+
+    public List<String> getMessageTypeNeedToSend() {
+        return messageTypeNeedToSend;
+    }
+
+    public void setMessageTypeNeedToSend(List<String> messageTypeNeedToSend) {
+        this.messageTypeNeedToSend = messageTypeNeedToSend;
     }
 
     public static class ObjectInitProperties {

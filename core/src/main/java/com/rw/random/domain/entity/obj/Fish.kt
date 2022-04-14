@@ -8,12 +8,13 @@ import com.rw.random.infra.constants.GrowthType
 import com.rw.random.infra.utils.BattleUtils
 import com.rw.random.infra.utils.SinksUtils
 import reactor.core.publisher.Sinks
+import kotlin.reflect.KClass
 
 open class Fish(
     id: Long,
     name: String,
     hasMaster: Boolean = false,
-    var weight: Int = 800, // 体重
+    var weight: Long = 800, // 体重
     var maxHeal: Int = 10000 + (Math.random() * 5000).toInt(),
     heal: Int = maxHeal,
     var recoverSpeed: Int = 100,
@@ -21,7 +22,7 @@ open class Fish(
     var def: Int = 90 + (Math.random() * 180).toInt(),
     earnSpeed: Int = 30,
     val dodge: Int = 5, // max 100
-    money: Int = (Math.random() * 200).toInt(),
+    money: Long = (Math.random() * 200).toLong(),
     taskProperties: TaskProperties,
     sound: Sinks.Many<RWEvent>?,
     taskChannel: Sinks.Many<RWTask>?,
@@ -61,12 +62,6 @@ open class Fish(
                         recover()
                         eventBack(event)
                     }
-                    is GrowthEvent -> {
-                        if (event.target == this) {
-                            growth(event.growthType, event.growthValue)
-                            eventBack(event)
-                        }
-                    }
                     is EarnEvent -> {
                         if (event.target == this) {
                             earn(event.amount)
@@ -88,14 +83,15 @@ open class Fish(
         }
     }
 
-    override fun nextTask(event: RWEvent): RWTask? {
+    override fun nextTask(event: RWEvent, excludeTask: Set<KClass<out RWTask>>): RWTask? {
         return when (event) {
             is EarnEvent -> null
-            else -> personality.randomTask(event, this)
+            else -> personality.randomTask(event, this, excludeTask)
         }
     }
 
     private fun growth(growthType: GrowthType, growthValue: Int) {
+        this.cost((this.weight * 0.5).toInt())
         this.weight += 1.coerceAtLeast((this.weight * 0.05).toInt())
         when (growthType) {
             GrowthType.ATK -> atk += growthValue
@@ -126,7 +122,7 @@ open class Fish(
         if (heal > maxHeal) heal = maxHeal
     }
 
-    private fun earn(amount: Int) {
+    private fun earn(amount: Long) {
         this.money += amount
         log.info("${this.name} 吃到${amount}克鱼粮！。")
     }

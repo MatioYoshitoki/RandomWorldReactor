@@ -1,6 +1,5 @@
 package com.rw.random.infra.handler
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.rw.random.common.dto.RedisStreamMessage
 import com.rw.random.domain.repository.RedisPubsubRepository
 import com.rw.random.infra.utils.SinksUtils
@@ -13,27 +12,25 @@ import reactor.util.concurrent.Queues
 @Component
 open class PubsubMessageHandler(
     private val redisPubsubRepository: RedisPubsubRepository,
-    private val objectMapper: ObjectMapper
 ) : SmartLifecycle {
 
     private var isRunning = false
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    private val skins = Sinks.many().unicast().onBackpressureBuffer(Queues.get<RedisStreamMessage>(256).get())
+    private val skins = Sinks.many().unicast().onBackpressureBuffer(Queues.get<String>(256).get())
 
     override fun start() {
         log.info("start send")
         this.isRunning = true
         skins.asFlux()
-            .map { objectMapper.writeValueAsString(it) }
             .flatMap {
                 redisPubsubRepository.pubMessage(it)
             }
             .subscribe()
     }
 
-    fun sendMessage(msg: RedisStreamMessage) {
+    fun sendMessage(msg: String) {
         try {
             SinksUtils.tryEmit(skins, msg)
         } catch (e: Exception) {

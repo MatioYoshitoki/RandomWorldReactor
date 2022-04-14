@@ -6,6 +6,7 @@ import com.rw.random.common.dto.RedisStreamMessage
 import com.rw.random.domain.entity.*
 import com.rw.random.domain.entity.obj.Being
 import com.rw.random.domain.entity.obj.Fish
+import com.rw.random.infra.config.ApplicationProperties
 import com.rw.random.infra.listener.ObjectStatusModifyEvent
 import com.rw.random.infra.subscription.SubscriptionRegistry
 import com.rw.random.infra.utils.SinksUtils
@@ -14,8 +15,10 @@ import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.ApplicationEventPublisherAware
 import org.springframework.context.SmartLifecycle
 import org.springframework.stereotype.Component
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.Sinks
+import reactor.core.scheduler.Schedulers
 import reactor.util.concurrent.Queues
 
 @Component
@@ -23,6 +26,7 @@ open class WorldMessageDispatchHandler(
     private val subscriptionRegistry: SubscriptionRegistry,
     private val snowflake: Snowflake,
     private val pubsubMessageHandler: PubsubMessageHandler,
+    private val applicationProperties: ApplicationProperties,
 ) : SmartLifecycle, ApplicationEventPublisherAware {
 
     open val worldChannel: Sinks.Many<RWEvent> =
@@ -42,62 +46,58 @@ open class WorldMessageDispatchHandler(
     override fun start() {
         running = true
         worldChannel.asFlux()
-            .doOnNext {
-                if (it is ObjectDestroyEvent) {
-                    destroyObj(it)
+            .publishOn(Schedulers.boundedElastic())
+            .doOnNext { event ->
+                if (event is ObjectDestroyEvent) {
+                    Mono.just(1).subscribe { destroyObj(event) }
                 }
             }
-            .doOnNext {
-                if (it is BeAtkEvent) {
-                    pubsubMessageHandler.sendMessage(
-                        RedisStreamMessage(
-                            it.source?.name,
-                            it.source?.id,
-                            it.target?.name,
-                            it.target?.id,
-                            it.eventType,
-                            1,
-                            it.msg
-                        )
-                    )
-                } else {
-                    pubsubMessageHandler.sendMessage(
-                        RedisStreamMessage(
-                            it.source?.name,
-                            it.source?.id,
-                            it.target?.name,
-                            it.target?.id,
-                            it.eventType,
-                            2,
-                            it.msg
-                        )
-                    )
-                }
-            }
+            .doOnNext { event -> Mono.just(1).subscribe { pushMessageToClient(event) } }
             .filter { it !is InternalEvent }
-            .delayUntil { event ->
+            .flatMap { event ->
                 if (event.target != null && event.target is Being) {
                     if (!event.target.isAlive()) {
-                        return@delayUntil Mono.empty<Void>()
+                        return@flatMap Mono.empty<Void>()
                     }
                 }
-                subscriptionRegistry.findAllObjByTopic(event.topic)
-                    .map { objId ->
-                        subscriptionRegistry.findConsumerByObjId(objId)
+                val targetIdList = mutableListOf<Long>()
+                if (event.target != null) {
+                    targetIdList.add(event.target.id)
+                }
+                if (event.source != null) {
+                    targetIdList.add(event.source.id)
+                }
+                val flux = if (event is TimeEvent) {
+                    subscriptionRegistry.findAllObjByTopic(event.topic)
+                } else {
+                    Flux.fromIterable(targetIdList)
+                }
+                flux
+                    .map {
+                        subscriptionRegistry.findConsumerByObjId(it)
                     }
                     .filter { it.isPresent }
                     .doOnNext {
-//                        log.info("exchange msg: $event")
                         it.get().accept(event)
                     }
             }
             .subscribe()
     }
 
+    private fun pushMessageToClient(event: RWEvent) {
+        // 可配置的消息转发类型
+        if (applicationProperties.messageTypeNeedToSend.contains(event.eventType)) {
+            val message = """
+            {"source_name": "${event.source?.name}", "source_id": ${event.source?.id}, "target_name": "${event.target?.name}", "target_id": ${event.target?.id}, "event_type": "${event.eventType}", "level": 1, "message": "${event.msg}"}
+            """.trimIndent()
+            pubsubMessageHandler.sendMessage(message)
+        }
+    }
+
     /**
      * 销毁对象
      * */
-    private fun destroyObj(event: ObjectDestroyEvent){
+    private fun destroyObj(event: ObjectDestroyEvent) {
         if (event.source!!.hasMaster) {
             publishObjectStatusChangeEvent(event.source.id, BeingStatus.DEAD)
         }
@@ -119,7 +119,7 @@ open class WorldMessageDispatchHandler(
     }
 
     @Suppress("SameParameterValue")
-    private fun publishObjectStatusChangeEvent(sourceId: Long, status: BeingStatus){
+    private fun publishObjectStatusChangeEvent(sourceId: Long, status: BeingStatus) {
         this.eventPublisher.publishEvent(ObjectStatusModifyEvent.of(sourceId, status))
     }
 

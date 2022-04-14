@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false" scan="true" scanPeriod="30 seconds">
+
+    <springProperty scop="context" name="spring.application.name" source="spring.application.name" defaultValue="logs"/>
+    <property name="log.path" value="/home/test/logs/${spring.application.name}"/>
+
+    <springProfile name="dev">
+        <!-- Console log output -->
+        <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+                <!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符-->
+                <!-- @formatter:off -->
+                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %highlight(%-5level) %cyan(%logger{50}:%line) - %highlight(%msg) %n</pattern>
+                <!-- @formatter:on -->
+            </encoder>
+        </appender>
+        <appender name="server" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${log.path}/server.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>${log.path}/server.%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
+                <maxFileSize>30MB</maxFileSize>
+                <maxHistory>30</maxHistory>
+                <totalSizeCap>1GB</totalSizeCap>
+                <cleanHistoryOnStart>true</cleanHistoryOnStart>
+            </rollingPolicy>
+            <encoder>
+                <pattern>%date [%thread] %-5level [%logger{50}] [%file:%line] - %msg%n</pattern>
+            </encoder>
+        </appender>
+        <root level="INFO">
+            <appender-ref ref="console"/>
+            <appender-ref ref="server"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="prod,test">
+        <!-- Log file debug output -->
+        <appender name="server" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${log.path}/server.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>${log.path}/server.%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
+                <maxFileSize>500MB</maxFileSize>
+                <maxHistory>7</maxHistory>
+                <totalSizeCap>50GB</totalSizeCap>
+                <cleanHistoryOnStart>true</cleanHistoryOnStart>
+            </rollingPolicy>
+            <encoder>
+                <pattern>%date [%thread] %-5level [%logger{50}] [%file:%line] - %msg%n</pattern>
+            </encoder>
+        </appender>
+
+        <!-- Log for output -->
+        <appender name="error" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${log.path}/error.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>${log.path}/error.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                <maxFileSize>100MB</maxFileSize>
+                <maxHistory>30</maxHistory>
+            </rollingPolicy>
+            <encoder>
+                <pattern>%date [%thread] %-5level [%logger{50}] [%file:%line] - %msg%n</pattern>
+            </encoder>
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>ERROR</level>
+            </filter>
+        </appender>
+
+        <appender name="async" class="ch.qos.logback.classic.AsyncAppender">
+            <discardingThreshold>0</discardingThreshold>
+            <!-- default 20, means drop lower event when has 20% capacity remaining -->
+            <queueSize>2000</queueSize>
+            <appender-ref ref="server"/>
+            <appender-ref ref="error"/>
+            <!--            <appender-ref ref="console"/>-->
+            <!--        <queueSize>1</queueSize> &lt;!&ndash; default 256 &ndash;&gt;-->
+            <includeCallerData>false</includeCallerData><!-- default false -->
+            <!-- default false, set to true to cause
+                the Appender not block the application and just drop the messages -->
+            <neverBlock>true</neverBlock>
+        </appender>
+
+        <root level="INFO">
+            <appender-ref ref="async"/>
+        </root>
+    </springProfile>
+
+</configuration>

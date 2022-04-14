@@ -8,6 +8,7 @@ import org.springframework.context.SmartLifecycle
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 import reactor.core.publisher.Sinks
+import reactor.core.scheduler.Schedulers
 import reactor.util.concurrent.Queues
 
 @Component
@@ -30,12 +31,13 @@ open class TaskHandler : SmartLifecycle {
     override fun start() {
         running = true
         taskHandler.asFlux()
-            .doOnNext { task ->
+            .subscribeOn(Schedulers.boundedElastic())
+            .subscribe { task ->
                 Mono.just(task.run()).subscribe()
                 if (!task.isFinish()) {
                     pushTask(task)
                 }
-            }.subscribe()
+            }
     }
 
     override fun stop() {

@@ -10,4 +10,10 @@ data class RedisStreamMessage(
     var message: String?
 ) {
     constructor() : this(null, null, null, null, null, null, null)
+
+    override fun toString(): String {
+        return """
+            {"source_name": "$sourceName", "source_id": $sourceId, "target_name": "$targetName", "target_id": $targetId, "event_type": "$eventType", "level": $level, "message": "$message"}
+        """.trimIndent()
+    }
 }
