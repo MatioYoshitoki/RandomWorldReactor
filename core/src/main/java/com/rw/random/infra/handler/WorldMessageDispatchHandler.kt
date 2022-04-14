@@ -77,6 +77,7 @@ open class WorldMessageDispatchHandler(
                         subscriptionRegistry.findConsumerByObjId(it)
                     }
                     .filter { it.isPresent }
+                    .publishOn(Schedulers.boundedElastic())
                     .doOnNext {
                         it.get().accept(event)
                     }

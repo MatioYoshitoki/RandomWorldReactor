@@ -122,14 +122,14 @@ open class StayTask(
     source: Being,
 ) : RWTask(1, source, null) {
     override fun run() {
-        source.sendMsg(
-            StayEvent(
-                System.currentTimeMillis(),
-                "Stay",
-                source.topic,
-                source,
-            )
-        )
+//        source.sendMsg(
+//            StayEvent(
+//                System.currentTimeMillis(),
+//                "Stay",
+//                source.topic,
+//                source,
+//            )
+//        )
         this.finish()
     }
 }
