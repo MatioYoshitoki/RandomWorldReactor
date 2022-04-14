@@ -114,7 +114,7 @@ open class Fish(
             GrowthType.RECOVER_SPEED -> recoverSpeed
             GrowthType.EARN_SPEED -> earnSpeed
         }
-        log.info("${this.name} 长大了！当前体重: ${this.weight}克。与此同时，$typeTag 提升了 $growthValue, 当前$typeTag: $currentValue")
+        log.debug("${this.name} 长大了！当前体重: ${this.weight}克。与此同时，$typeTag 提升了 $growthValue, 当前$typeTag: $currentValue")
     }
 
     private fun recover() {
@@ -124,13 +124,13 @@ open class Fish(
 
     private fun earn(amount: Long) {
         this.money += amount
-        log.info("${this.name} 吃到${amount}克鱼粮！。")
+        log.debug("${this.name} 吃到${amount}克鱼粮！。")
     }
 
     private fun beAtk(event: ATKEvent) {
         val rate = RandomUtil.randomInt(100)
         if (rate < this.dodge) {
-            log.info("${this.name} 受到【${event.source!!.name}】攻击, 但未命中！")
+            log.debug("${this.name} 受到【${event.source!!.name}】攻击, 但未命中！")
             SinksUtils.tryEmit(
                 this.sound!!,
                 BeAtkEvent(
@@ -152,7 +152,7 @@ open class Fish(
                     damage = damage
                 )
             )
-            log.info("${this.name} 受到【${event.source.name}】攻击, 生命值减少${damage}。剩余生命值: ${this.heal}")
+            log.debug("${this.name} 受到【${event.source.name}】攻击, 生命值减少${damage}。剩余生命值: ${this.heal}")
         }
 
     }

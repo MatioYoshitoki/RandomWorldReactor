@@ -14,7 +14,7 @@ open class AliveHumanScheduler(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    @Scheduled(fixedDelay = 10_000, initialDelay = 10_000)
+//    @Scheduled(fixedDelay = 10_000, initialDelay = 10_000)
     fun doTask() {
         log.info("获取存活列表")
         subscriptionRegistry.findObjByTopic(zone.getZoneTopic(), Fish::class)

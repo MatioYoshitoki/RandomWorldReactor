@@ -2,15 +2,12 @@ package com.rw.random.infra.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @ConfigurationProperties("random-world")
 public class ApplicationProperties {
 
-    private Integer eventChannelSize = 4096;
+    private Integer eventChannelSize = 6000;
     private Long workId = 1L;
 
     private Long loadTestFishCount = 1000L;
@@ -23,7 +20,7 @@ public class ApplicationProperties {
         return objects;
     }
 
-    public List<String> messageTypeNeedToSend = Arrays.asList("BeAtk");
+    public List<String> messageTypeNeedToSend = Collections.singletonList("BeAtk");
 
     public void setObjects(Map<String, ObjectInitProperties> objects) {
         this.objects = objects;

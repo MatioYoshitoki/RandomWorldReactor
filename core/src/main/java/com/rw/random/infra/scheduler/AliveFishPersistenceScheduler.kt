@@ -20,7 +20,7 @@ open class AliveFishPersistenceScheduler(
 
     @Scheduled(fixedDelay = 500, initialDelay = 3_000)
     fun doTask() {
-        log.info("获取存活列表")
+        log.debug("获取存活列表")
         Flux.fromStream(subscriptionRegistry.findObjByTopic(zone.getZoneTopic(), Fish::class))
             .filter { it is Fish }
             .delayUntil {

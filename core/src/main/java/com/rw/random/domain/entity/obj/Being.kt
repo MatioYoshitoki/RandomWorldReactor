@@ -42,35 +42,35 @@ open class Being(
                     is HealEvent -> {
                         if (event.target == this) {
                             this.heal += event.heal
-                            log.info("${this.name}(${this.id}) 获得治疗！当前生命值: ${this.heal}")
+                            log.debug("${this.name}(${this.id}) 获得治疗！当前生命值: ${this.heal}")
                             eventBack(event)
                         }
                     }
                     is UpgradeWeaponEvent -> {
                         if (event.target == this) {
                             this.atk += event.atk
-                            log.info("${this.name} 武器得到升级！当前攻击力: ${this.atk}")
+                            log.debug("${this.name} 武器得到升级！当前攻击力: ${this.atk}")
                             eventBack(event)
                         }
                     }
                     is UpgradeToolEvent -> {
                         if (event.target == this) {
                             this.earnSpeed += event.earnSpeed
-                            log.info("${this.name} 工具得到升级！当前挖矿效率: ${this.earnSpeed}")
+                            log.debug("${this.name} 工具得到升级！当前挖矿效率: ${this.earnSpeed}")
                             eventBack(event)
                         }
                     }
                     is EarnEvent -> {
                         if (event.target == this) {
                             this.money += event.amount
-                            log.info("${this.name} 获得金币${event.amount}。当前金币：${this.money}")
+                            log.debug("${this.name} 获得金币${event.amount}。当前金币：${this.money}")
                             eventBack(event)
                         }
                     }
                     is ATKEvent -> {
                         if (event.target == this && (event.source as Being).isAlive()) {
                             this.heal -= event.atk
-                            log.info("${this.name} 受到【${event.source.name}】攻击, 生命值减少${event.atk}。剩余生命值: ${this.heal}")
+                            log.debug("${this.name} 受到【${event.source.name}】攻击, 生命值减少${event.atk}。剩余生命值: ${this.heal}")
                             if (heal <= 0) {
                                 this.destroy(event.source)
                             } else {
@@ -166,7 +166,7 @@ open class Being(
             log.warn("${this.name}(${this.id}) 余额不足！")
             return false
         }
-        log.info("${this.name}(${this.id}) 花费: $amount, 剩余: ${this.money}")
+        log.debug("${this.name}(${this.id}) 花费: $amount, 剩余: ${this.money}")
         this.money = money - amount
         return true
     }

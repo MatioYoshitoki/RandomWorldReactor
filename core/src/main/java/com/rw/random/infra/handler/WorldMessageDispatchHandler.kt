@@ -29,7 +29,7 @@ open class WorldMessageDispatchHandler(
     private val applicationProperties: ApplicationProperties,
 ) : SmartLifecycle, ApplicationEventPublisherAware {
 
-    // 此处的队列大小与池中鱼的数量密切相关需要保证1:1的比例
+    // 此处的队列大小与池中鱼的数量密切相关需要保证1:3的比例
     open val worldChannel: Sinks.Many<RWEvent> =
         Sinks.many().unicast().onBackpressureBuffer(Queues.get<RWEvent>(applicationProperties.eventChannelSize).get())
     private var running: Boolean = false
@@ -61,17 +61,18 @@ open class WorldMessageDispatchHandler(
                         return@flatMap Mono.empty<Void>()
                     }
                 }
-                val targetIdList = mutableListOf<Long>()
-                if (event.target != null) {
-                    targetIdList.add(event.target.id)
-                }
-                if (event.source != null) {
-                    targetIdList.add(event.source.id)
-                }
                 val flux = if (event is TimeEvent) {
                     subscriptionRegistry.findAllObjByTopic(event.topic)
                 } else {
-                    Flux.fromIterable(targetIdList)
+                    if (event.source != null && event.target != null) {
+                        Flux.just(event.target.id, event.source.id)
+                    } else if (event.source != null) {
+                        Flux.just(event.source.id)
+                    } else if (event.target != null) {
+                        Flux.just(event.target!!.id)
+                    } else {
+                        Flux.empty()
+                    }
                 }
                 flux
                     .map {
@@ -82,6 +83,10 @@ open class WorldMessageDispatchHandler(
                     .doOnNext {
                         it.get().accept(event)
                     }
+            }
+            .onErrorResume {
+                log.error("dispatch error!", it)
+                Mono.empty()
             }
             .subscribe()
     }
