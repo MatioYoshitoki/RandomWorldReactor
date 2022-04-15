@@ -27,6 +27,7 @@ open class WorldMessageDispatchHandler(
     private val snowflake: Snowflake,
     private val pubsubMessageHandler: PubsubMessageHandler,
     private val applicationProperties: ApplicationProperties,
+    private val zone: RWZone
 ) : SmartLifecycle, ApplicationEventPublisherAware {
 
     // 此处的队列大小与池中鱼的数量密切相关需要保证1:3的比例
@@ -55,10 +56,13 @@ open class WorldMessageDispatchHandler(
             }
             .doOnNext { event -> Mono.just(1).subscribe { pushMessageToClient(event) } }
             .filter { it !is InternalEvent }
-            .flatMap { event ->
+            .onErrorContinue { err, it ->
+                log.error("dispatch error!", err, it)
+            }
+            .subscribe { event ->
                 if (event.target != null && event.target is Being) {
                     if (!event.target.isAlive()) {
-                        return@flatMap Mono.empty<Void>()
+                        return@subscribe
                     }
                 }
                 val flux = if (event is TimeEvent) {
@@ -69,26 +73,17 @@ open class WorldMessageDispatchHandler(
                     } else if (event.source != null) {
                         Flux.just(event.source.id)
                     } else if (event.target != null) {
-                        Flux.just(event.target!!.id)
+                        Flux.just(event.target.id)
                     } else {
                         Flux.empty()
                     }
                 }
                 flux
-                    .map {
-                        subscriptionRegistry.findConsumerByObjId(it)
-                    }
+                    .map { subscriptionRegistry.findConsumerByObjId(it) }
                     .filter { it.isPresent }
-                    .publishOn(Schedulers.boundedElastic())
-                    .doOnNext {
-                        it.get().accept(event)
-                    }
+                    .subscribeOn(Schedulers.boundedElastic())
+                    .subscribe { it.get().accept(event) }
             }
-            .onErrorResume {
-                log.error("dispatch error!", it)
-                Mono.empty()
-            }
-            .subscribe()
     }
 
     private fun pushMessageToClient(event: RWEvent) {
@@ -108,20 +103,18 @@ open class WorldMessageDispatchHandler(
         if (event.source!!.hasMaster) {
             publishObjectStatusChangeEvent(event.source.id, BeingStatus.DEAD)
         }
-        subscriptionRegistry.findZoneByTopic(event.topic)?.clearObj(event.source)
+        zone.clearObj(event.source)
         if (event.target != null && (event.source is Fish)) {
-            val eater = subscriptionRegistry.findConsumerByObjId(event.target.id)
-            if (eater.isPresent) {
-                eater.get().accept(
-                    EarnEvent(
-                        snowflake.nextId(),
-                        "Earn",
-                        event.source.weight,
-                        event.target.topic,
-                        event.target
-                    )
+            event.target.handler.accept(
+                EarnEvent(
+                    snowflake.nextId(),
+                    "Earn",
+                    event.source.weight,
+                    event.target.topic,
+                    event.target
                 )
-            }
+            )
+
         }
     }
 

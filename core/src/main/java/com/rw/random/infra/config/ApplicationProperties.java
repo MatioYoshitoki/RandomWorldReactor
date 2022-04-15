@@ -7,7 +7,8 @@ import java.util.*;
 @ConfigurationProperties("random-world")
 public class ApplicationProperties {
 
-    private Integer eventChannelSize = 6000;
+    private Integer eventChannelSize = 2048;
+    private Integer taskChannelSize = 1024;
     private Long workId = 1L;
 
     private Long loadTestFishCount = 1000L;
@@ -44,6 +45,14 @@ public class ApplicationProperties {
 
     public Long getLoadTestFishCount() {
         return loadTestFishCount;
+    }
+
+    public Integer getTaskChannelSize() {
+        return taskChannelSize;
+    }
+
+    public void setTaskChannelSize(Integer taskChannelSize) {
+        this.taskChannelSize = taskChannelSize;
     }
 
     public void setLoadTestFishCount(Long loadTestFishCount) {

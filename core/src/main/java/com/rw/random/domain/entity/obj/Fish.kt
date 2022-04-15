@@ -131,8 +131,7 @@ open class Fish(
         val rate = RandomUtil.randomInt(100)
         if (rate < this.dodge) {
             log.debug("${this.name} 受到【${event.source!!.name}】攻击, 但未命中！")
-            SinksUtils.tryEmit(
-                this.sound!!,
+            sendMsg(
                 BeAtkEvent(
                     System.currentTimeMillis(), "BeAtk", this.topic, this, event.source,
                     success = false,
@@ -143,8 +142,7 @@ open class Fish(
         } else {
             val damage = (event.atk * (1 - BattleUtils.defRate(this.def))).toInt()
             this.heal -= damage
-            SinksUtils.tryEmit(
-                this.sound!!,
+            sendMsg(
                 BeAtkEvent(
                     System.currentTimeMillis(), "BeAtk", this.topic, this, event.source!!,
                     success = true,

@@ -1,5 +1,6 @@
 package com.rw.random.infra.subscription
 
+import cn.hutool.core.collection.ConcurrentHashSet
 import com.rw.random.domain.entity.RWEvent
 import com.rw.random.domain.entity.RWObject
 import com.rw.random.domain.entity.RWZone
@@ -18,7 +19,7 @@ import kotlin.reflect.KClass
 open class SubscriptionRegistry {
 
     private val log: Logger = LoggerFactory.getLogger(javaClass)
-    private val zoneSubscriptions = ConcurrentHashMap<String, MutableSet<Long>>()
+    private val zoneSubscriptions = ConcurrentHashMap<String, ConcurrentHashSet<Long>>()
     private val objectHandler = ConcurrentHashMap<Long, Consumer<RWEvent>>()
     private val objectTopic = ConcurrentHashMap<Long, String>()
     private val topicZone = ConcurrentHashMap<String, RWZone>()
@@ -44,7 +45,7 @@ open class SubscriptionRegistry {
     fun registerZone(zone: RWZone) {
         log.info("Zone created ${zone.zoneName}")
         topicZone[zone.getZoneTopic()] = zone
-        zoneSubscriptions[zone.getZoneTopic()] = mutableSetOf()
+        zoneSubscriptions[zone.getZoneTopic()] = ConcurrentHashSet()
     }
 
     fun findZoneByTopic(topic: String): RWZone? {

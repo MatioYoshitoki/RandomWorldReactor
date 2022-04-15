@@ -1,6 +1,7 @@
 package com.rw.random.infra.handler
 
 import com.rw.random.domain.entity.RWTask
+import com.rw.random.infra.config.ApplicationProperties
 import com.rw.random.infra.subscription.SubscriptionRegistry
 import com.rw.random.infra.utils.SinksUtils
 import org.slf4j.LoggerFactory
@@ -12,10 +13,12 @@ import reactor.core.scheduler.Schedulers
 import reactor.util.concurrent.Queues
 
 @Component
-open class TaskHandler : SmartLifecycle {
+open class TaskHandler(
+    applicationProperties: ApplicationProperties
+) : SmartLifecycle {
 
     open val taskHandler: Sinks.Many<RWTask> =
-        Sinks.many().unicast().onBackpressureBuffer(Queues.get<RWTask>(256).get())
+        Sinks.many().unicast().onBackpressureBuffer(Queues.get<RWTask>(applicationProperties.taskChannelSize).get())
     private var running: Boolean = false
     private val log = LoggerFactory.getLogger(javaClass)
 
