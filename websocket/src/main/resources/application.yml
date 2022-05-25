@@ -17,6 +17,12 @@ spring:
     timeout: 10
 
 random-world:
+  security:
+    authentication:
+      jwt:
+        secret: ODdiNDZjNTc2OTYyMzZiZTdlYzM0ZTZlYTM1YjczNzQ3ODhkMjBiNzM5NGZlMjUwMmJlOWRlMWYwNTQ3YzQyNWQxYWRiNDZkMzFkZmZhOGJiOTZjZmZlOWIxYWYxMWZkMzQzNDg4YTdkYjU4NDhhMDU4OGNlZjNlMDk4NzZmZmY=
   websocket:
     core-url: http://127.0.0.1:8080
+
+
 

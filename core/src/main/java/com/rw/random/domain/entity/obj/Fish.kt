@@ -20,7 +20,7 @@ open class Fish(
     var recoverSpeed: Int = 100,
     atk: Int = 300 + (Math.random() * 200).toInt(),
     var def: Int = 90 + (Math.random() * 180).toInt(),
-    earnSpeed: Int = 30,
+    earnSpeed: Long = 30,
     val dodge: Int = 5, // max 100
     money: Long = (Math.random() * 200).toLong(),
     taskProperties: TaskProperties,

@@ -51,7 +51,7 @@ open class FishRepositoryImpl(
                     it["recoverSpeed"]!!.toInt(),
                     it["atk"]!!.toInt(),
                     it["def"]!!.toInt(),
-                    it["earnSpeed"]!!.toInt(),
+                    it["earnSpeed"]!!.toLong(),
                     it["dodge"]!!.toInt(),
                     it["money"]!!.toLong(),
                     taskProperties,
@@ -66,7 +66,7 @@ open class FishRepositoryImpl(
     override fun saveOne(fish: Fish): Mono<Void> {
         return Mono.just(fish)
             .map {
-                mapOf(
+                mutableMapOf(
                     "id" to it.id.toString(),
                     "name" to it.name,
                     "hasMaster" to it.hasMaster.toString(),
@@ -86,7 +86,7 @@ open class FishRepositoryImpl(
             }
             .flatMap { map ->
                 redisTemplate.opsForHash<String, String>()
-                    .putAll(getKey(fish.id), map.toMutableMap())
+                    .putAll(getKey(fish.id), map)
             }
             .then()
 

@@ -1,7 +1,7 @@
 package com.rw.websocket
 
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration
 import org.springframework.boot.runApplication
 import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.web.reactive.config.EnableWebFlux
@@ -9,7 +9,8 @@ import org.springframework.web.reactive.config.EnableWebFlux
 @EnableWebFlux
 @EnableScheduling
 @SpringBootApplication(
-    scanBasePackages = ["com.rw.websocket"]
+    scanBasePackages = ["com.rw.websocket", "com.rw.random"],
+    exclude = [WebMvcAutoConfiguration::class]
 )
 open class WebsocketServer
 

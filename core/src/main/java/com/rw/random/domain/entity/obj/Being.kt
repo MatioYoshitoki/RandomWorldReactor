@@ -22,7 +22,7 @@ open class Being(
     taskProperties: TaskProperties,
     sound: Sinks.Many<RWEvent>?,
     taskChannel: Sinks.Many<RWTask>?,
-    var earnSpeed: Int = 30,
+    var earnSpeed: Long = 30L,
     var money: Long = (Math.random() * 200).toLong(),
     var status: BeingStatus = BeingStatus.ALIVE
 ) : RWObject(
@@ -187,8 +187,8 @@ open class Being(
         this.vision = vision
     }
 
-    fun tryEarn(): Int {
-        return earnSpeed + RandomUtil.randomInt(200)
+    fun tryEarn(): Long {
+        return earnSpeed + RandomUtil.randomLong(200)
     }
 
     override fun subscribe(topic: String) {

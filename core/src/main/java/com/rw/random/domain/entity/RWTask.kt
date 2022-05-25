@@ -136,14 +136,14 @@ open class StayTask(
 
 open class EarnTask(
     source: Being,
-    private val earnSpeed: Int,
+    private val earnSpeed: Long,
 ) : RWTask(1, source, null) {
     override fun run() {
         source.sendMsg(
             EarnEvent(
                 System.currentTimeMillis(),
                 "Earn",
-                earnSpeed + (Math.random() * 100).toLong(),
+                earnSpeed,
                 source.topic,
                 source,
             )
