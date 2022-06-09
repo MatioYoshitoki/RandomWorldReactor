@@ -3,9 +3,12 @@ server:
 
 logging:
   level:
-    root: INFO
+    root: DEBUG
     com.rw.random: DEBUG
+
 spring:
+  security:
+    strategy: MODE_GLOBAL
   redis:
     host: 127.0.0.1
     password:

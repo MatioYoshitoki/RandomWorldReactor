@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono
 import java.net.URI
 
 interface FishCreateUseCase {
-    fun runCase(accessToken: String): Mono<Long>
+    fun runCase(userId: Long): Mono<Long>
 }
 
 @Component
@@ -23,8 +23,8 @@ open class FishCreateUseCaseImpl(
 
     private val webClient = WebClient.create()
 
-    override fun runCase(accessToken: String): Mono<Long> {
-        return userService.getUserWithPropertyByAccessToken(accessToken)
+    override fun runCase(userId: Long): Mono<Long> {
+        return userService.getUserWithPropertyByUserId(userId)
             .delayUntil { user ->
                 userService.getAllFish(user.userId)
                     .count()

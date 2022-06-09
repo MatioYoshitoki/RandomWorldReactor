@@ -8,9 +8,9 @@ import java.time.Duration
 
 interface UserSignInRepository {
 
-    fun exist(userId: Long, date: String): Mono<Boolean>
+    fun exist(userName: String, date: String): Mono<Boolean>
 
-    fun addOne(userId: Long, date: String): Mono<Void>
+    fun addOne(userName: String, date: String): Mono<Void>
 
 }
 
@@ -18,22 +18,22 @@ interface UserSignInRepository {
 open class UserSignInRepositoryImpl(
     private val redisTemplate: ReactiveStringRedisTemplate
 ) : UserSignInRepository {
-    override fun exist(userId: Long, date: String): Mono<Boolean> {
+    override fun exist(userName: String, date: String): Mono<Boolean> {
         return redisTemplate.opsForSet()
-            .isMember(getKey(date), userId.toString())
+            .isMember(getKey(date), userName)
     }
 
-    override fun addOne(userId: Long, date: String): Mono<Void> {
+    override fun addOne(userName: String, date: String): Mono<Void> {
         return redisTemplate.opsForSet()
             .size(getKey(date))
             .filter { it > 0 }
             .delayUntil {
                 redisTemplate.opsForSet()
-                    .add(getKey(date), userId.toString())
+                    .add(getKey(date), userName)
             }
             .switchIfEmpty {
                 redisTemplate.opsForSet()
-                    .add(getKey(date), userId.toString())
+                    .add(getKey(date), userName)
                     .delayUntil { redisTemplate.expire(getKey(date), Duration.ofHours(25)) }
             }
             .then()

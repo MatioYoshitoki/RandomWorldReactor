@@ -18,11 +18,10 @@ object SecurityUtils {
      *
      * @return the login of the current user.
      */
-    val currentUserLogin: Optional<String>
-        get() {
-            val securityContext = SecurityContextHolder.getContext()
-            return Optional.ofNullable(extractPrincipal(securityContext.authentication))
-        }
+    fun getCurrentUserLogin(): Optional<String> {
+        val securityContext = SecurityContextHolder.getContext()
+        return Optional.ofNullable(extractPrincipal(securityContext.authentication))
+    }
 
     private fun extractPrincipal(authentication: Authentication?): String? {
         if (authentication == null) {
@@ -42,13 +41,14 @@ object SecurityUtils {
      *
      * @return the JWT of the current user.
      */
-    val currentUserJWT: Optional<String>
-        get() {
-            val securityContext = SecurityContextHolder.getContext()
-            return Optional.ofNullable(securityContext.authentication)
-                .filter { authentication: Authentication -> authentication.credentials is String }
-                .map { authentication: Authentication -> authentication.credentials as String }
-        }
+    fun getCurrentUserJWT(): Optional<String> {
+        val securityContext = SecurityContextHolder.getContext()
+
+        return Optional.ofNullable(securityContext.authentication)
+            .filter { authentication: Authentication -> authentication.credentials is String }
+            .map { authentication: Authentication -> authentication.credentials as String }
+    }
+
 
     /**
      * Check if a user is authenticated.

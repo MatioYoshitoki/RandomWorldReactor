@@ -1,11 +1,13 @@
 package com.rw.websocket.domain.entity
 
+import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
 
 @Table("user_property")
 open class UserProperty(
     @Column("id")
+    @Id
     var id: Long? = null,
     @Column("exp")
     var exp: Long? = null,

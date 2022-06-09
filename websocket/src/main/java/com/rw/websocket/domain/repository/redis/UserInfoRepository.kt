@@ -6,23 +6,23 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 
-interface AccessTokenUserRepository {
+interface UserInfoRepository {
 
-    fun findOneUserProperty(accessToken: String): Mono<UserWithProperty>
+    fun findOneUserProperty(userId: Long): Mono<UserWithProperty>
 
-    fun addAll(accessToken: String, map: Map<String, String>): Mono<Boolean>
+    fun addAll(userId: Long, map: Map<String, String>): Mono<Boolean>
 
-    fun removeOne(accessToken: String): Mono<Void>
+    fun removeOne(userId: Long): Mono<Void>
 
 }
 
 @Component
-open class AccessTokenUserRepositoryImpl(
+open class UserInfoRepositoryImpl(
     private val redisTemplate: ReactiveStringRedisTemplate
-) : AccessTokenUserRepository {
-    override fun findOneUserProperty(accessToken: String): Mono<UserWithProperty> {
+) : UserInfoRepository {
+    override fun findOneUserProperty(userId: Long): Mono<UserWithProperty> {
         return redisTemplate.opsForHash<String, String>()
-            .entries(getKey(accessToken))
+            .entries(getKey(userId))
             .collectList()
             .map { list ->
                 list.associate { Pair(it.key, it.value) }
@@ -39,19 +39,19 @@ open class AccessTokenUserRepositoryImpl(
             }
     }
 
-    override fun addAll(accessToken: String, map: Map<String, String>): Mono<Boolean> {
+    override fun addAll(userId: Long, map: Map<String, String>): Mono<Boolean> {
         return redisTemplate.opsForHash<String, String>()
-            .putAll(getKey(accessToken), map)
+            .putAll(getKey(userId), map)
     }
 
-    override fun removeOne(accessToken: String): Mono<Void> {
+    override fun removeOne(userId: Long): Mono<Void> {
         return redisTemplate.opsForHash<String, String>()
-            .delete(getKey(accessToken))
+            .delete(getKey(userId))
             .then()
     }
 
-    private fun getKey(accessToken: String): String {
-        return RedisKeyConstants.ACCESS_TOKEN_USER + accessToken
+    private fun getKey(userId: Long): String {
+        return RedisKeyConstants.USER_INFO + userId
     }
 
 }

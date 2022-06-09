@@ -1,6 +1,7 @@
 package com.rw.websocket.api.controller
 
 import com.rw.random.common.dto.RWResult
+import com.rw.random.common.utils.SecurityUtils
 import com.rw.websocket.app.service.GameService
 import com.rw.websocket.app.usecase.*
 import com.rw.websocket.domain.dto.request.FishDetails
@@ -23,77 +24,101 @@ open class FishController(
 
     @GetMapping("/list")
     fun fishDetail(
-        @RequestHeader("access_token") accessToken: String,
         @RequestParam("fishId") fishId: Long?,
     ): Mono<RWResult<List<FishDetails>>> {
         // 鱼列表
-        return fishDetailsUseCase.runCase(accessToken, fishId)
+        return SecurityUtils.getCurrentUserLogin()
             .map {
-                RWResult.success("成功", it)
+                fishDetailsUseCase.runCase(it.toLong(), fishId)
+                    .map { result ->
+                        RWResult.success("成功", result)
+                    }
+                    .defaultIfEmpty(RWResult.failed("获取失败", null))
             }
-            .defaultIfEmpty(RWResult.failed("获取失败", null))
+            .orElseGet {
+                Mono.just(RWResult.failed("用户未登录", null))
+            }
+
     }
 
     @PostMapping("/put")
     fun fishPut(
-        @RequestHeader("access_token") accessToken: String,
         @RequestBody fishRequest: FishRequest
     ): Mono<RWResult<Long>> {
         log.info("fishId=${fishRequest.fishId}")
         // 放鱼
-        return fishPutFishUseCase.runCase(accessToken, fishRequest.fishId)
+        return SecurityUtils.getCurrentUserLogin()
             .map {
-                RWResult.success("投放成功", it)
+                fishPutFishUseCase.runCase(it.toLong(), fishRequest.fishId)
+                    .map { result ->
+                        RWResult.success("投放成功", result)
+                    }
+                    .onErrorResume { err ->
+                        log.error("create error", err)
+                        Mono.just(RWResult.failed("投放失败, ${err.message}", null))
+                    }
+                    .defaultIfEmpty(RWResult.failed("投放失败", null))
             }
-            .onErrorResume {
-                log.error("create error", it)
-                Mono.just(RWResult.failed("投放失败, ${it.message}", null))
+            .orElseGet {
+                Mono.just(RWResult.failed("用户未登录", null))
             }
-            .defaultIfEmpty(RWResult.failed("投放失败", null))
     }
 
 
     @PostMapping("/create")
-    fun fishCreate(@RequestHeader("access_token") accessToken: String): Mono<RWResult<Long>> {
-        return fishCreateUseCase.runCase(accessToken)
+    fun fishCreate(): Mono<RWResult<Long>> {
+        return SecurityUtils.getCurrentUserLogin()
             .map {
-                RWResult.success("投放成功!", it)
+                fishCreateUseCase.runCase(it.toLong())
+                    .map { result ->
+                        RWResult.success("投放成功!", result)
+                    }
+                    .onErrorResume { err ->
+                        log.error("create error", err)
+                        Mono.just(RWResult.failed("投放失败, ${err.message}", null))
+                    }
+                    .defaultIfEmpty(RWResult.failed("投放失败", null))
             }
-            .onErrorResume {
-                log.error("create error", it)
-                Mono.just(RWResult.failed("投放失败, ${it.message}", null))
+            .orElseGet {
+                Mono.just(RWResult.failed("用户未登录", null))
             }
-            .defaultIfEmpty(RWResult.failed("投放失败", null))
+
     }
 
 
     @PostMapping("/fishing")
-    fun fishing(
-        @RequestHeader("access_token") accessToken: String,
-        @RequestBody fishRequest: FishRequest
-    ): Mono<RWResult<Long>> {
+    fun fishing(@RequestBody fishRequest: FishRequest): Mono<RWResult<Long>> {
         // 捞鱼
-        return fishingUseCase.runCase(accessToken, fishRequest.fishId)
-            .map { RWResult.success("捕捞成功", it) }
-            .defaultIfEmpty(RWResult.failed("捕捞失败", null))
+        return SecurityUtils.getCurrentUserLogin().map {
+            fishingUseCase.runCase(it.toLong(), fishRequest.fishId)
+                .map { result -> RWResult.success("捕捞成功", result) }
+                .defaultIfEmpty(RWResult.failed("捕捞失败", null))
+        }
+            .orElseGet {
+                Mono.just(RWResult.failed("用户未登录", null))
+            }
     }
 
     @PostMapping("/eat")
     fun fishEat(
-        @RequestHeader("access_token") accessToken: String,
         @RequestBody fishRequest: FishRequest
     ): Mono<RWResult<Nothing>> {
         // 吃鱼
-        return eatFishUseCase.runCase(accessToken, fishRequest.fishId)
-            .filter { it }
+        return SecurityUtils.getCurrentUserLogin()
             .map {
-                RWResult.success("成功", null)
+                eatFishUseCase.runCase(it.toLong(), fishRequest.fishId)
+                    .filter { result -> result }
+                    .map {
+                        RWResult.success("成功", null)
+                    }
+                    .onErrorResume { err ->
+                        log.error("eat error", err)
+                        Mono.just(RWResult.failed("失败", null))
+                    }
+                    .defaultIfEmpty(RWResult.failed("失败", null))
             }
-            .onErrorResume {
-                log.error("eat error", it)
-                Mono.just(RWResult.failed("失败", null))
-            }
-            .defaultIfEmpty(RWResult.failed("失败", null))
+
+            .orElseGet { Mono.just(RWResult.failed("用户未登录", null)) }
     }
 
 }

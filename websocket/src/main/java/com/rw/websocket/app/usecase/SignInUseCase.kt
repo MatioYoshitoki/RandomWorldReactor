@@ -6,7 +6,7 @@ import reactor.core.publisher.Mono
 
 interface SignInUseCase {
 
-    fun runCase(accessToken: String): Mono<Boolean>
+    fun runCase(userName: String): Mono<Boolean>
 
 }
 
@@ -15,7 +15,7 @@ open class SignInUseCaseImpl(
     private val userService: UserService
 ) : SignInUseCase {
 
-    override fun runCase(accessToken: String): Mono<Boolean> {
-        return userService.signIn(accessToken)
+    override fun runCase(userName: String): Mono<Boolean> {
+        return userService.signIn(userName)
     }
 }

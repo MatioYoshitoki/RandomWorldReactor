@@ -61,7 +61,7 @@ open class UserRepositoryImpl(
         return entityTemplate.databaseClient
             .sql(
                 """
-                    select a.access_token, b.exp, b.fish_max_count, b.money, a.id as `user_id`, a.user_name  from user a 
+                    select b.exp, b.fish_max_count, b.money, a.id as `user_id`, a.user_name from user a 
                     left join user_property b on a.id = b.id
                     where a.id = $userId
                 """.trimIndent()

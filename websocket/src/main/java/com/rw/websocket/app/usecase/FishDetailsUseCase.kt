@@ -8,7 +8,7 @@ import reactor.core.publisher.Mono
 
 interface FishDetailsUseCase {
 
-    fun runCase(accessToken: String, fishId: Long?): Mono<List<FishDetails>>
+    fun runCase(userId: Long, fishId: Long?): Mono<List<FishDetails>>
 
 }
 
@@ -17,8 +17,8 @@ open class FishDetailsUseCaseImpl(
     private val fishService: FishService,
     private val userService: UserService,
 ) : FishDetailsUseCase {
-    override fun runCase(accessToken: String, fishId: Long?): Mono<List<FishDetails>> {
-        return userService.getUserWithPropertyByAccessToken(accessToken)
+    override fun runCase(userId: Long, fishId: Long?): Mono<List<FishDetails>> {
+        return userService.getUserWithPropertyByUserId(userId)
             .flatMap { user ->
                 userService.getAllFish(user.userId)
                     .filter {

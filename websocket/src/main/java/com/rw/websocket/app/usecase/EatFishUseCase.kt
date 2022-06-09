@@ -7,7 +7,7 @@ import reactor.core.publisher.Mono
 
 interface EatFishUseCase {
 
-    fun runCase(accessToken: String, fishId: Long): Mono<Boolean>
+    fun runCase(userId: Long, fishId: Long): Mono<Boolean>
 
 }
 
@@ -15,17 +15,14 @@ interface EatFishUseCase {
 open class EatFishUseCaseImpl(
     private val userService: UserService,
 ) : EatFishUseCase {
-    override fun runCase(accessToken: String, fishId: Long): Mono<Boolean> {
-        return userService.getUserWithPropertyByAccessToken(accessToken)
-            .flatMap { user ->
-                userService.getUserFish(fishId)
-                    .filter {
-                        user.userId == it.userId
-                    }
-                    .filter { it.fishStatus == BeingStatus.SLEEP.ordinal }
+    override fun runCase(userId: Long, fishId: Long): Mono<Boolean> {
+        return userService.getUserFish(fishId)
+            .filter {
+                userId == it.userId
             }
+            .filter { it.fishStatus == BeingStatus.SLEEP.ordinal }
             .flatMap {
-                userService.eatFish(fishId, it.userId, accessToken)
+                userService.eatFish(fishId, it.userId)
             }
     }
 }

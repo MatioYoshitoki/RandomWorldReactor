@@ -1,10 +1,6 @@
 package com.rw.websocket.app.service
 
 import cn.hutool.core.date.DatePattern
-import cn.hutool.core.date.DateUnit
-import cn.hutool.core.date.DateUtil
-import cn.hutool.core.lang.Snowflake
-import cn.hutool.crypto.SecureUtil
 import com.rw.random.common.entity.UserFish
 import com.rw.websocket.domain.entity.User
 import com.rw.websocket.domain.entity.UserWithProperty
@@ -14,6 +10,7 @@ import com.rw.websocket.domain.repository.UserPropertyRepository
 import com.rw.websocket.domain.repository.UserRepository
 import com.rw.websocket.domain.repository.redis.AccessTokenUserRepository
 import com.rw.websocket.domain.repository.redis.UserAccessTokenRepository
+import com.rw.websocket.domain.repository.redis.UserInfoRepository
 import com.rw.websocket.domain.repository.redis.UserSignInRepository
 import com.rw.websocket.infre.exception.RegisterException
 import com.rw.websocket.infre.utils.FishWeight2ExpUtil.exchangeWeight2Exp
@@ -25,15 +22,17 @@ import java.util.*
 
 interface UserService {
 
-    fun eatFish(fishId: Long, userId: Long, accessToken: String): Mono<Boolean>
+    fun eatFish(fishId: Long, userId: Long): Mono<Boolean>
 
-    fun updateAccessToken(userId: Long, accessToken: String): Mono<UserWithProperty>
+    fun updateUserInfoCache(userId: Long): Mono<UserWithProperty>
 
     fun getUserWithPropertyByAccessToken(accessToken: String): Mono<UserWithProperty>
 
+    fun getUserWithPropertyByUserId(userId: Long): Mono<UserWithProperty>
+
     fun getUserByUserName(userName: String): Mono<User>
 
-    fun newUser(userName: String, password: String): Mono<UserWithProperty>
+    fun newUser(userName: String, password: String): Mono<Void>
 
     fun getAllFish(userId: Long): Flux<UserFish>
 
@@ -43,7 +42,7 @@ interface UserService {
 
     fun logout(accessToken: String): Mono<Void>
 
-    fun signIn(accessToken: String): Mono<Boolean>
+    fun signIn(userName: String): Mono<Boolean>
 
 }
 
@@ -53,12 +52,12 @@ open class UserServiceImpl(
     private val userPropertyRepository: UserPropertyRepository,
     private val userAccessTokenRepository: UserAccessTokenRepository,
     private val accessTokenUserRepository: AccessTokenUserRepository,
+    private val userInfoRepository: UserInfoRepository,
     private val userFishRepository: UserFishRepository,
     private val fishRepository: FishRepository,
-    private val userSignInRepository: UserSignInRepository,
-    private val snowflake: Snowflake
+    private val userSignInRepository: UserSignInRepository
 ) : UserService {
-    override fun eatFish(fishId: Long, userId: Long, accessToken: String): Mono<Boolean> {
+    override fun eatFish(fishId: Long, userId: Long): Mono<Boolean> {
         return userPropertyRepository.findOne(userId)
             .flatMap { property ->
                 fishRepository.findOne(fishId)
@@ -71,31 +70,23 @@ open class UserServiceImpl(
                     }
             }
             .flatMap {
-                accessTokenUserRepository.addAll(accessToken, mapOf("exp" to it.toString()))
+                userInfoRepository.addAll(userId, mapOf("exp" to it.toString()))
             }
     }
 
-    override fun updateAccessToken(userId: Long, accessToken: String): Mono<UserWithProperty> {
-        return userRepository.updateAccessToken(userId, accessToken)
-            .filter { it >= 1 }
+    override fun updateUserInfoCache(userId: Long): Mono<UserWithProperty> {
+        return userRepository.findUserWithPropertyFromDB(userId)
             .delayUntil {
-                userAccessTokenRepository.addOne(userId, accessToken)
+                userInfoRepository.addAll(userId, it)
             }
-            .flatMap {
-                userRepository.findUserWithPropertyFromDB(userId)
-                    .delayUntil {
-                        accessTokenUserRepository.addAll(accessToken, it)
-                    }
-                    .map {
-                        UserWithProperty(
-                            userId,
-                            it[UserWithProperty.USER_NAME_FIELD]!!,
-                            accessToken,
-                            it[UserWithProperty.EXP_FIELD]?.toLong() ?: 0,
-                            it[UserWithProperty.MONEY_FIELD]?.toLong() ?: 0,
-                            it[UserWithProperty.FISH_MAX_COUNT_FIELD]?.toLong() ?: 0
-                        )
-                    }
+            .map {
+                UserWithProperty(
+                    userId,
+                    it[UserWithProperty.USER_NAME_FIELD]!!,
+                    it[UserWithProperty.EXP_FIELD]?.toLong() ?: 0,
+                    it[UserWithProperty.MONEY_FIELD]?.toLong() ?: 0,
+                    it[UserWithProperty.FISH_MAX_COUNT_FIELD]?.toLong() ?: 0
+                )
             }
     }
 
@@ -103,11 +94,15 @@ open class UserServiceImpl(
         return accessTokenUserRepository.findOneUserProperty(accessToken)
     }
 
+    override fun getUserWithPropertyByUserId(userId: Long): Mono<UserWithProperty> {
+        return userInfoRepository.findOneUserProperty(userId)
+    }
+
     override fun getUserByUserName(userName: String): Mono<User> {
         return userRepository.findOneByUserName(userName)
     }
 
-    override fun newUser(userName: String, password: String): Mono<UserWithProperty> {
+    override fun newUser(userName: String, password: String): Mono<Void> {
         return userNameExist(userName)
             .flatMap { exist ->
                 if (exist) {
@@ -117,17 +112,21 @@ open class UserServiceImpl(
                 }
             }
             .flatMap {
-                userRepository.addOne(userName, SecureUtil.md5(password))
+                userRepository.addOne(userName, password)
             }
             .flatMap {
                 userPropertyRepository.addOne(it.id)
             }
-            .flatMap {
-                val accessToken = SecureUtil.md5(snowflake.nextId().toString())
-                val userId = it.id!!
-                updateAccessToken(userId, accessToken)
-            }
+//            .flatMap {
+//                updateUserInfoCache(it.id!!)
+//            }
+//            .flatMap {
+//                val accessToken = SecureUtil.md5(snowflake.nextId().toString())
+//                val userId = it.id!!
+//                updateAccessToken(userId, accessToken)
+//            }
             .switchIfEmpty { Mono.error(RegisterException("用户名被占用")) }
+            .then()
     }
 
     override fun getAllFish(userId: Long): Flux<UserFish> {
@@ -150,31 +149,32 @@ open class UserServiceImpl(
             }
     }
 
-    override fun signIn(accessToken: String): Mono<Boolean> {
-        return getUserWithPropertyByAccessToken(accessToken)
-            .flatMap {
-                val userId = it.userId
-                val date = DatePattern.PURE_DATE_FORMAT.format(Date())
-                userSignInRepository.exist(userId, date)
-                    .flatMap { exist ->
-                        if (!exist) {
+    override fun signIn(userName: String): Mono<Boolean> {
+        val date = DatePattern.PURE_DATE_FORMAT.format(Date())
+        return userSignInRepository.exist(userName, date)
+            .flatMap { exist ->
+                if (!exist) {
+                    userRepository.findOneByUserName(userName)
+                        .flatMap {
+                            val userId = it.id
                             userPropertyRepository.findOne(userId)
                                 .flatMap { property ->
                                     userPropertyRepository.updateMoney(userId, property.money!! + 5000)
                                         .flatMap {
-                                            accessTokenUserRepository.addAll(
-                                                accessToken,
+                                            userInfoRepository.addAll(
+                                                userId,
                                                 mapOf("money" to (property.money!! + 5000).toString())
                                             )
                                         }
                                 }
                                 .delayUntil {
-                                    userSignInRepository.addOne(userId, date)
+                                    userSignInRepository.addOne(userName, date)
                                 }
-                        } else {
-                            Mono.just(exist)
                         }
-                    }
+
+                } else {
+                    Mono.just(false)
+                }
             }
     }
 

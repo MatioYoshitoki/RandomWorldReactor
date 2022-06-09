@@ -7,8 +7,6 @@ class UserWithProperty(
     val userId: Long,
     @JsonProperty(USER_NAME_FIELD)
     val userName: String,
-    @JsonProperty(ACCESS_TOKEN_FIELD)
-    val accessToken: String,
     @JsonProperty(EXP_FIELD)
     var exp: Long,
     @JsonProperty(MONEY_FIELD)
@@ -16,6 +14,9 @@ class UserWithProperty(
     @JsonProperty(FISH_MAX_COUNT_FIELD)
     var fishMaxCount: Long,
 ) {
+
+    @JsonProperty(ACCESS_TOKEN_FIELD)
+    var accessToken: String? = null
 
     companion object {
         const val USER_ID_FIELD = "user_id"

@@ -1,47 +1,48 @@
 package com.rw.random.common.filter
 
+import com.rw.random.common.constants.HttpConstants
 import com.rw.random.common.constants.HttpConstants.ACCESS_TOKEN_PARAM
-import com.rw.random.common.constants.HttpConstants.AUTHORIZATION_HEADER
 import com.rw.random.common.security.TokenProvider
+import org.springframework.http.server.reactive.ServerHttpRequest
 import org.springframework.security.core.Authentication
-import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.core.context.ReactiveSecurityContextHolder
 import org.springframework.util.StringUtils
-import org.springframework.web.filter.GenericFilterBean
-import java.io.IOException
-import javax.servlet.FilterChain
-import javax.servlet.ServletException
-import javax.servlet.ServletRequest
-import javax.servlet.ServletResponse
-import javax.servlet.http.HttpServletRequest
+import org.springframework.web.server.ServerWebExchange
+import org.springframework.web.server.WebFilter
+import org.springframework.web.server.WebFilterChain
+import reactor.core.publisher.Mono
 
 /**
  * Filters incoming requests and installs a Spring Security principal if a header corresponding to a valid user is
  * found.
+ *
+ * @author liuting
  */
-class JWTFilter(tokenProvider: TokenProvider) : GenericFilterBean() {
+open class JWTFilter(tokenProvider: TokenProvider) : WebFilter {
     private val tokenProvider: TokenProvider
 
     init {
         this.tokenProvider = tokenProvider
     }
 
-    @Throws(IOException::class, ServletException::class)
-    override fun doFilter(servletRequest: ServletRequest, servletResponse: ServletResponse, filterChain: FilterChain) {
-        val httpServletRequest: HttpServletRequest = servletRequest as HttpServletRequest
-        val jwt = resolveToken(httpServletRequest)
+    override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
+        val jwt = resolveToken(exchange.request)
         if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
             val authentication: Authentication = tokenProvider.getAuthentication(jwt)
-            SecurityContextHolder.getContext().authentication = authentication
+            return chain.filter(exchange)
+                .subscriberContext(ReactiveSecurityContextHolder.withAuthentication(authentication))
         }
-        filterChain.doFilter(servletRequest, servletResponse)
+        return chain.filter(exchange)
     }
 
-    private fun resolveToken(request: HttpServletRequest): String? {
-        val bearerToken: String = request.getHeader(AUTHORIZATION_HEADER)
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+    private fun resolveToken(request: ServerHttpRequest): String? {
+        val bearerToken = request.headers.getFirst(HttpConstants.AUTHORIZATION_HEADER)
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(HttpConstants.BEARER_PREFIX)) {
             return bearerToken.substring(7)
         }
-        // 如果 header 中没有 Authorization，则从 uri 参数中获取，如果还没有，则从 body json 中获取
-        return request.getParameter(ACCESS_TOKEN_PARAM)
+        val queryParams = request.queryParams
+        return if (queryParams.containsKey(ACCESS_TOKEN_PARAM)) {
+            queryParams[ACCESS_TOKEN_PARAM]!![0] // 取第一个
+        } else null
     }
 }

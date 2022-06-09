@@ -4,6 +4,7 @@ import com.rw.websocket.domain.dto.request.FishDetails
 import com.rw.websocket.domain.repository.FishRepository
 import com.rw.websocket.domain.repository.UserFishRepository
 import com.rw.websocket.domain.repository.redis.AccessTokenUserRepository
+import com.rw.websocket.domain.repository.redis.UserInfoRepository
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
 
@@ -13,7 +14,7 @@ interface FishService {
 
     fun clearFish(fishId: Long): Mono<Long>
 
-    fun checkFishOwner(fishId: Long, accessToken: String): Mono<Boolean>
+    fun checkFishOwner(fishId: Long, userId: Long): Mono<Boolean>
 
 }
 
@@ -21,7 +22,8 @@ interface FishService {
 open class FishServiceImpl(
     private val userFishRepository: UserFishRepository,
     private val fishRepository: FishRepository,
-    private val accessTokenUserRepository: AccessTokenUserRepository
+    private val accessTokenUserRepository: AccessTokenUserRepository,
+    private val userInfoRepository: UserInfoRepository
 ) : FishService {
     override fun getFishDetail(fishId: Long): Mono<FishDetails> {
         return fishRepository.findOne(fishId)
@@ -35,8 +37,8 @@ open class FishServiceImpl(
             .map { fishId }
     }
 
-    override fun checkFishOwner(fishId: Long, accessToken: String): Mono<Boolean> {
-        return accessTokenUserRepository.findOneUserProperty(accessToken)
+    override fun checkFishOwner(fishId: Long, userId: Long): Mono<Boolean> {
+        return userInfoRepository.findOneUserProperty(userId)
             .flatMap { user ->
                 userFishRepository.findFishOwner(fishId)
                     .map {

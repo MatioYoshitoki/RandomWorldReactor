@@ -12,7 +12,6 @@ open class FishMarketController {
 
     @GetMapping("/list")
     fun fishMarketList(
-        @RequestHeader("access_token") accessToken: String,
         @RequestBody pageRequest: PageRequest
     ): Mono<RWResult<String>> {
         // TODO 鱼市列表
@@ -21,7 +20,6 @@ open class FishMarketController {
 
     @PostMapping("/buy")
     fun fishBuy(
-        @RequestHeader("access_token") accessToken: String,
         @RequestBody fishRequest: FishRequest
     ): Mono<RWResult<String>> {
         // TODO 买鱼
@@ -30,7 +28,6 @@ open class FishMarketController {
 
     @PostMapping("/sell")
     fun fishSell(
-        @RequestHeader("access_token") accessToken: String,
         @RequestBody fishPriceRequest: FishPriceRequest
     ): Mono<RWResult<String>> {
         // TODO 卖鱼
@@ -39,7 +36,6 @@ open class FishMarketController {
 
     @PostMapping("/cancel/sell")
     fun fishCancelSell(
-        @RequestHeader("access_token") accessToken: String,
         @RequestBody fishRequest: FishRequest
     ): Mono<RWResult<String>> {
         // TODO 取消卖鱼
@@ -48,13 +44,10 @@ open class FishMarketController {
 
     @PostMapping("/change/price")
     fun fishChangePrice(
-        @RequestHeader("access_token") accessToken: String,
         @RequestBody fishPriceRequest: FishPriceRequest
     ): Mono<RWResult<String>> {
         // TODO 更改鱼价
         return Mono.empty()
     }
-
-
 
 }
