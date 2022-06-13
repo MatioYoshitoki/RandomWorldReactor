@@ -3,11 +3,8 @@ package com.rw.random.app.usecase
 import com.rw.random.common.constants.BeingStatus
 import com.rw.random.domain.entity.RWZone
 import com.rw.random.domain.entity.obj.Fish
-import com.rw.random.domain.repository.FishRepository
-import com.rw.random.domain.repository.UserFishRepository
 import com.rw.random.domain.service.PersistenceService
 import com.rw.random.domain.service.UserFishService
-import com.rw.random.infra.subscription.SubscriptionRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono

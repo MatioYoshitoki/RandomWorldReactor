@@ -1,7 +1,6 @@
 package com.rw.websocket.infre.config
 
 import cn.hutool.core.lang.Snowflake
-import cn.hutool.core.lang.generator.SnowflakeGenerator
 import com.rw.websocket.infre.handler.DefaultMessageBrokerRelayPublisher
 import com.rw.websocket.infre.handler.RandomWorldWebSocketHandler
 import org.springframework.beans.factory.annotation.Configurable

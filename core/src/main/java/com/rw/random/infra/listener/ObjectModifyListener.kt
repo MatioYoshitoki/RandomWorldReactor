@@ -1,15 +1,10 @@
 package com.rw.random.infra.listener
 
 import com.rw.random.common.constants.BeingStatus
-import com.rw.random.common.entity.UserFish
 import com.rw.random.domain.repository.UserFishRepository
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEvent
 import org.springframework.context.event.EventListener
-import org.springframework.data.r2dbc.core.R2dbcEntityTemplate
-import org.springframework.data.r2dbc.query.Criteria.where
-import org.springframework.data.relational.core.query.Query
-import org.springframework.data.relational.core.query.Update
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
 

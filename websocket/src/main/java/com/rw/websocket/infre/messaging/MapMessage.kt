@@ -1,9 +1,7 @@
 package com.rw.websocket.infre.messaging
 
 import org.springframework.lang.NonNull
-import java.util.HashMap
-import java.util.Optional
-import java.util.Collections
+import java.util.*
 
 class MapMessage(map: Map<String, Any>) : HashMap<String, Any>() {
     init {

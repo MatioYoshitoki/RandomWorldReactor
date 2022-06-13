@@ -1,9 +1,7 @@
 package com.rw.websocket.app.usecase
 
-import cn.hutool.crypto.SecureUtil
 import com.rw.websocket.app.service.UserService
 import com.rw.websocket.domain.dto.request.RegisterRequest
-import com.rw.websocket.domain.entity.UserWithProperty
 import com.rw.websocket.infre.exception.RegisterException
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component

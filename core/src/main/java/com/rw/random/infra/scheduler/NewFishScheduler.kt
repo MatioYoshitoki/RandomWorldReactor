@@ -25,7 +25,7 @@ open class NewFishScheduler(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    @Scheduled(fixedDelay = 2_00, initialDelay = 3_000)
+    //    @Scheduled(fixedDelay = 2_00, initialDelay = 3_000)
     fun doTask() {
         val count = zone.getAllObjByType(Fish::class).count()
         log.info("当前数量: $count, 目标数量：${applicationProperties.loadTestFishCount}")

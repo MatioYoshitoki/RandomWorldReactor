@@ -16,18 +16,6 @@ open class LoginUseCaseImpl(
     private val userService: UserService,
 ) : LoginUseCase {
     override fun runCase(userName: String): Mono<UserWithProperty> {
-        return userService.getUserByUserName(userName)
-            .flatMap {
-                userService.updateUserInfoCache(it.id)
-            }
-//            .flatMap {
-//                if (SecureUtil.md5(password) != it.password) {
-//                    Mono.error(PasswordWrongException())
-//                } else {
-//                    val accessToken = SecureUtil.md5(snowflake.nextId().toString())
-//                    val userId = it.id
-//                    userService.updateAccessToken(userId, accessToken)
-//                }
-//            }
+        return userService.updateUserInfoCache(userName)
     }
 }

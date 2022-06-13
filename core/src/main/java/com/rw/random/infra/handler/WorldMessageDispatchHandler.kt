@@ -2,7 +2,6 @@ package com.rw.random.infra.handler
 
 import cn.hutool.core.lang.Snowflake
 import com.rw.random.common.constants.BeingStatus
-import com.rw.random.common.dto.RedisStreamMessage
 import com.rw.random.domain.entity.*
 import com.rw.random.domain.entity.obj.Being
 import com.rw.random.domain.entity.obj.Fish

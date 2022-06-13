@@ -1,6 +1,5 @@
 package com.rw.random.infra.utils
 
-import java.io.UnsupportedEncodingException
 import java.util.*
 
 

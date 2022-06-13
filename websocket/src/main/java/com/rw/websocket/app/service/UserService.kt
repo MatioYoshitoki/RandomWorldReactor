@@ -22,13 +22,13 @@ import java.util.*
 
 interface UserService {
 
-    fun eatFish(fishId: Long, userId: Long): Mono<Boolean>
+    fun eatFish(fishId: Long, userName: String): Mono<Boolean>
 
-    fun updateUserInfoCache(userId: Long): Mono<UserWithProperty>
+    fun updateUserInfoCache(userName: String): Mono<UserWithProperty>
 
     fun getUserWithPropertyByAccessToken(accessToken: String): Mono<UserWithProperty>
 
-    fun getUserWithPropertyByUserId(userId: Long): Mono<UserWithProperty>
+    fun getUserWithPropertyByUserName(userName: String): Mono<UserWithProperty>
 
     fun getUserByUserName(userName: String): Mono<User>
 
@@ -57,31 +57,34 @@ open class UserServiceImpl(
     private val fishRepository: FishRepository,
     private val userSignInRepository: UserSignInRepository
 ) : UserService {
-    override fun eatFish(fishId: Long, userId: Long): Mono<Boolean> {
-        return userPropertyRepository.findOne(userId)
+    override fun eatFish(fishId: Long, userName: String): Mono<Boolean> {
+        return userRepository.findOneByUserName(userName)
+            .flatMap {
+                userPropertyRepository.findOne(it.id)
+            }
             .flatMap { property ->
                 fishRepository.findOne(fishId)
                     .map { exchangeWeight2Exp(it.weight) }
                     .filterWhen {
-                        userPropertyRepository.updateExp(userId, property.exp ?: (0 + it))
+                        userPropertyRepository.updateExp(property.id!!, property.exp ?: (0 + it))
                     }
                     .map {
                         property.exp ?: (0 + it)
                     }
             }
             .flatMap {
-                userInfoRepository.addAll(userId, mapOf("exp" to it.toString()))
+                userInfoRepository.addAll(userName, mapOf("exp" to it.toString()))
             }
     }
 
-    override fun updateUserInfoCache(userId: Long): Mono<UserWithProperty> {
-        return userRepository.findUserWithPropertyFromDB(userId)
+    override fun updateUserInfoCache(userName: String): Mono<UserWithProperty> {
+        return userRepository.findUserWithPropertyByUserNameFromDB(userName)
             .delayUntil {
-                userInfoRepository.addAll(userId, it)
+                userInfoRepository.addAll(userName, it)
             }
             .map {
                 UserWithProperty(
-                    userId,
+                    it[UserWithProperty.USER_ID_FIELD]!!.toLong(),
                     it[UserWithProperty.USER_NAME_FIELD]!!,
                     it[UserWithProperty.EXP_FIELD]?.toLong() ?: 0,
                     it[UserWithProperty.MONEY_FIELD]?.toLong() ?: 0,
@@ -94,8 +97,8 @@ open class UserServiceImpl(
         return accessTokenUserRepository.findOneUserProperty(accessToken)
     }
 
-    override fun getUserWithPropertyByUserId(userId: Long): Mono<UserWithProperty> {
-        return userInfoRepository.findOneUserProperty(userId)
+    override fun getUserWithPropertyByUserName(userName: String): Mono<UserWithProperty> {
+        return userInfoRepository.findOneUserProperty(userName)
     }
 
     override fun getUserByUserName(userName: String): Mono<User> {
@@ -162,7 +165,7 @@ open class UserServiceImpl(
                                     userPropertyRepository.updateMoney(userId, property.money!! + 5000)
                                         .flatMap {
                                             userInfoRepository.addAll(
-                                                userId,
+                                                userName,
                                                 mapOf("money" to (property.money!! + 5000).toString())
                                             )
                                         }

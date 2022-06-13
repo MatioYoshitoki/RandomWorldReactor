@@ -8,11 +8,11 @@ import reactor.core.publisher.Mono
 
 interface UserInfoRepository {
 
-    fun findOneUserProperty(userId: Long): Mono<UserWithProperty>
+    fun findOneUserProperty(userName: String): Mono<UserWithProperty>
 
-    fun addAll(userId: Long, map: Map<String, String>): Mono<Boolean>
+    fun addAll(userName: String, map: Map<String, String>): Mono<Boolean>
 
-    fun removeOne(userId: Long): Mono<Void>
+    fun removeOne(userName: String): Mono<Void>
 
 }
 
@@ -20,14 +20,14 @@ interface UserInfoRepository {
 open class UserInfoRepositoryImpl(
     private val redisTemplate: ReactiveStringRedisTemplate
 ) : UserInfoRepository {
-    override fun findOneUserProperty(userId: Long): Mono<UserWithProperty> {
+    override fun findOneUserProperty(userName: String): Mono<UserWithProperty> {
         return redisTemplate.opsForHash<String, String>()
-            .entries(getKey(userId))
+            .entries(getKey(userName))
             .collectList()
             .map { list ->
                 list.associate { Pair(it.key, it.value) }
             }
-            .filter { it.containsKey(UserWithProperty.USER_ID_FIELD) && it.containsKey(UserWithProperty.ACCESS_TOKEN_FIELD) }
+            .filter { it.containsKey(UserWithProperty.USER_ID_FIELD) }
             .map {
                 UserWithProperty(
                     it[UserWithProperty.USER_ID_FIELD]!!.toLong(),
@@ -39,19 +39,19 @@ open class UserInfoRepositoryImpl(
             }
     }
 
-    override fun addAll(userId: Long, map: Map<String, String>): Mono<Boolean> {
+    override fun addAll(userName: String, map: Map<String, String>): Mono<Boolean> {
         return redisTemplate.opsForHash<String, String>()
-            .putAll(getKey(userId), map)
+            .putAll(getKey(userName), map)
     }
 
-    override fun removeOne(userId: Long): Mono<Void> {
+    override fun removeOne(userName: String): Mono<Void> {
         return redisTemplate.opsForHash<String, String>()
-            .delete(getKey(userId))
+            .delete(getKey(userName))
             .then()
     }
 
-    private fun getKey(userId: Long): String {
-        return RedisKeyConstants.USER_INFO + userId
+    private fun getKey(userName: String): String {
+        return RedisKeyConstants.USER_INFO + userName
     }
 
 }

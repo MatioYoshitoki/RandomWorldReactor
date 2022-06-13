@@ -28,7 +28,7 @@ open class UserFishRepositoryImpl(
 ) : UserFishRepository {
     override fun addOne(userId: Long, fishId: Long): Mono<UserFish> {
         return entityTemplate.insert(UserFish::class.java)
-            .using(UserFish(userId, fishId, BeingStatus.ALIVE.ordinal))
+            .using(UserFish(null, userId, fishId, BeingStatus.ALIVE.ordinal))
     }
 
     override fun deleteOne(fishId: Long): Mono<Int> {

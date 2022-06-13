@@ -1,18 +1,16 @@
 package com.rw.random.common.security
 
 import com.rw.random.common.config.RWSecurityProperties
-import org.springframework.security.authorization.ReactiveAuthorizationManager
-import org.springframework.security.web.server.authorization.AuthorizationContext
 import org.springframework.security.authentication.AuthenticationTrustResolver
 import org.springframework.security.authentication.AuthenticationTrustResolverImpl
-import reactor.core.publisher.Mono
 import org.springframework.security.authorization.AuthorizationDecision
+import org.springframework.security.authorization.ReactiveAuthorizationManager
 import org.springframework.security.core.Authentication
-import org.springframework.stereotype.Component
+import org.springframework.security.web.server.authorization.AuthorizationContext
 import org.springframework.util.AntPathMatcher
 import org.springframework.web.server.ServerWebExchange
+import reactor.core.publisher.Mono
 
-@Component
 open class RWReactiveAccessManager(
     private val securityProperties: RWSecurityProperties
 ) : ReactiveAuthorizationManager<AuthorizationContext> {

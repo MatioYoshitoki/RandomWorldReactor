@@ -2,7 +2,6 @@ package com.rw.random.infra.handler
 
 import com.rw.random.domain.entity.RWTask
 import com.rw.random.infra.config.ApplicationProperties
-import com.rw.random.infra.subscription.SubscriptionRegistry
 import com.rw.random.infra.utils.SinksUtils
 import org.slf4j.LoggerFactory
 import org.springframework.context.SmartLifecycle

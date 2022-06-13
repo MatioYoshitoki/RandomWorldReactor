@@ -1,10 +1,10 @@
 package com.rw.random.domain.entity.obj
 
 import cn.hutool.core.util.RandomUtil
+import com.rw.random.common.constants.BeingStatus
 import com.rw.random.domain.entity.*
 import com.rw.random.infra.JFunction
 import com.rw.random.infra.config.TaskProperties
-import com.rw.random.common.constants.BeingStatus
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Sinks

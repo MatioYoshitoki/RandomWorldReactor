@@ -1,7 +1,6 @@
 package com.rw.websocket.domain.dto.request
 
 import com.rw.random.common.constants.BeingStatus
-import reactor.core.publisher.Sinks
 
 class FishDetails(
     var id: Long,

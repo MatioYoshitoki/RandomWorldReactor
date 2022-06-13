@@ -1,6 +1,5 @@
 package com.rw.random.infra.handler
 
-import com.rw.random.common.dto.RedisStreamMessage
 import com.rw.random.domain.repository.RedisPubsubRepository
 import com.rw.random.infra.utils.SinksUtils
 import org.slf4j.LoggerFactory

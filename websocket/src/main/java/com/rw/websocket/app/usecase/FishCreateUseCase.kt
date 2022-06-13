@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono
 import java.net.URI
 
 interface FishCreateUseCase {
-    fun runCase(userId: Long): Mono<Long>
+    fun runCase(userName: String): Mono<Long>
 }
 
 @Component
@@ -23,8 +23,8 @@ open class FishCreateUseCaseImpl(
 
     private val webClient = WebClient.create()
 
-    override fun runCase(userId: Long): Mono<Long> {
-        return userService.getUserWithPropertyByUserId(userId)
+    override fun runCase(userName: String): Mono<Long> {
+        return userService.getUserWithPropertyByUserName(userName)
             .delayUntil { user ->
                 userService.getAllFish(user.userId)
                     .count()
@@ -44,12 +44,12 @@ open class FishCreateUseCaseImpl(
                 }
             }
             .flatMap { user ->
-                expendMoney(user.userId)
+                expendMoney(user.userId, userName)
             }
     }
 
-    private fun expendMoney(userId: Long): Mono<Long> {
-        return moneyChangeService.expendMoney(userId, applicationProperties.newFishPrice)
+    private fun expendMoney(userId: Long, userName: String): Mono<Long> {
+        return moneyChangeService.expendMoney(userId, userName, applicationProperties.newFishPrice)
             .flatMap { enoughMoney ->
                 if (!enoughMoney) {
                     Mono.error(EnterFishException("${applicationProperties.moneyName}不足！"))
@@ -61,7 +61,7 @@ open class FishCreateUseCaseImpl(
                                 userService.bindUserFish(userId, fishId)
                                     .map { fishId }
                             } else {
-                                moneyChangeService.earnMoney(userId, applicationProperties.newFishPrice)
+                                moneyChangeService.earnMoney(userId, userName, applicationProperties.newFishPrice)
                                     .flatMap {
                                         Mono.error(EnterFishException(result.message))
                                     }

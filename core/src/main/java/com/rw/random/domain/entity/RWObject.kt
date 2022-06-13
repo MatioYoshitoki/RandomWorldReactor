@@ -17,7 +17,7 @@ abstract class RWObject(
     val name: String,
     var hasMaster: Boolean = false,
     val taskProperties: TaskProperties,
-    val sound: Sinks.Many<RWEvent>?,
+    private val sound: Sinks.Many<RWEvent>?,
     private val taskChannel: Sinks.Many<RWTask>?,
 ) {
 

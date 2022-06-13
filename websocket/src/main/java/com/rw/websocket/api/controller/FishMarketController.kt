@@ -1,7 +1,9 @@
 package com.rw.websocket.api.controller
 
 import com.rw.random.common.dto.RWResult
-import com.rw.websocket.domain.dto.request.*
+import com.rw.websocket.domain.dto.request.FishPriceRequest
+import com.rw.websocket.domain.dto.request.FishRequest
+import com.rw.websocket.domain.dto.request.PageRequest
 import org.springframework.web.bind.annotation.*
 import reactor.core.publisher.Mono
 

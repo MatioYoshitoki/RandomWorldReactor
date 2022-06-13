@@ -2,7 +2,6 @@ package com.rw.websocket.api.controller
 
 import com.rw.random.common.dto.RWResult
 import com.rw.random.common.security.TokenProvider
-import com.rw.random.common.utils.SecurityUtils
 import com.rw.websocket.app.usecase.LoginUseCase
 import com.rw.websocket.app.usecase.RegisterUseCase
 import com.rw.websocket.app.usecase.SignInUseCase

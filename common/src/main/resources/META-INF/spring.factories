@@ -1,2 +1,2 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.rw.random.common.config.RWSecurityAutoConfiguration
+#org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+#com.rw.random.common.config.RWSecurityAutoConfiguration
