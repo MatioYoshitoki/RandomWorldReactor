@@ -99,9 +99,7 @@ open class WorldMessageDispatchHandler(
      * 销毁对象
      * */
     private fun destroyObj(event: ObjectDestroyEvent) {
-        if (event.source!!.hasMaster) {
-            publishObjectStatusChangeEvent(event.source.id, BeingStatus.DEAD)
-        }
+        publishObjectStatusChangeEvent(event.source!!.id, BeingStatus.DEAD, event.source.hasMaster)
         zone.clearObj(event.source)
         if (event.target != null && (event.source is Fish)) {
             event.target.handler.accept(
@@ -118,8 +116,8 @@ open class WorldMessageDispatchHandler(
     }
 
     @Suppress("SameParameterValue")
-    private fun publishObjectStatusChangeEvent(sourceId: Long, status: BeingStatus) {
-        this.eventPublisher.publishEvent(ObjectStatusModifyEvent.of(sourceId, status))
+    private fun publishObjectStatusChangeEvent(sourceId: Long, status: BeingStatus, hasMaster: Boolean) {
+        this.eventPublisher.publishEvent(ObjectStatusModifyEvent.of(sourceId, status, hasMaster))
     }
 
     override fun stop() {

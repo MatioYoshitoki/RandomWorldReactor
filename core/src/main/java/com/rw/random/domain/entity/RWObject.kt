@@ -5,6 +5,7 @@ import com.rw.random.infra.utils.SinksUtils
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Sinks
 import java.util.*
+import java.util.concurrent.atomic.AtomicLong
 import java.util.function.Consumer
 
 
@@ -35,9 +36,12 @@ abstract class RWObject(
 
     abstract fun unsubscribe(topic: String)
 
+    private val msgCountFlag = AtomicLong()
+
     fun sendMsg(event: RWEvent) {
         if (sound != null) {
             try {
+                log.debug("message count: {}", msgCountFlag.incrementAndGet())
                 SinksUtils.tryEmit(sound, event)
             } catch (e: Exception) {
                 log.error("send msg failed!", e)

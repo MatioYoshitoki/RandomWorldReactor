@@ -98,7 +98,7 @@ open class IncomingHandler(
         val uid = SimpleMessageUtils.getUserId(message) ?: -1
         metadata[DefaultRandomWorldSessionManager.UID_KEY] = uid
 
-        log.debug("Subscribe message={}, metadata={}", message, metadata)
+        log.info("Subscribe message={}, metadata={}", message, metadata)
 //        subscriptionsRegistry.initSubscribeChannels(message)
         // 订阅 session 频道
         subscriptionRegistry.subscribe(session.id, SimpleMessageUtils.buildSessionDestination(session.id))

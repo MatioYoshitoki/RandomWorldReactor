@@ -2,6 +2,7 @@ package com.rw.random.domain.entity
 
 import cn.hutool.core.util.RandomUtil
 import com.rw.random.domain.entity.obj.Being
+import org.slf4j.LoggerFactory
 import reactor.util.function.Tuple3
 import reactor.util.function.Tuples
 import java.util.*
@@ -13,6 +14,7 @@ open class RWPersonality(
 ) {
 
     private var eventBehavior: Map<KClass<out RWEvent>, SortedMap<Int, KClass<out RWTask>>> = mapOf()
+    private val log = LoggerFactory.getLogger(javaClass)
 
     init {
         val position = position(personality)
@@ -203,6 +205,7 @@ open class RWPersonality(
                 if (event is ATKEvent) {
                     ATKTask(obj, event.source!! as Being)
                 } else {
+                    log.debug("敌人数量: {}", obj.findAllHumanSameZone().count())
                     val target = obj.findAllHumanSameZone().filter { it != obj }.findAny()
                     if (target.isPresent) {
                         ATKTask(obj, target.get())
