@@ -36,13 +36,10 @@ abstract class RWObject(
 
     abstract fun unsubscribe(topic: String)
 
-    private val msgCountFlag = AtomicLong()
-
     fun sendMsg(event: RWEvent) {
         if (sound != null) {
             try {
-                log.debug("message count: {}", msgCountFlag.incrementAndGet())
-                SinksUtils.tryEmit(sound, event)
+                SinksUtils.tryEmit(sound, event, 20)
             } catch (e: Exception) {
                 log.error("send msg failed!", e)
             }
@@ -52,7 +49,7 @@ abstract class RWObject(
     fun pushTask(task: RWTask) {
         if (taskChannel != null) {
             try {
-                SinksUtils.tryEmit(taskChannel, task)
+                SinksUtils.tryEmit(taskChannel, task, 20)
             } catch (e: Exception) {
                 log.error("push task failed!", e)
             }

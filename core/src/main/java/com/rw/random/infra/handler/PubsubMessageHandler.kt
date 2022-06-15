@@ -31,7 +31,7 @@ open class PubsubMessageHandler(
 
     fun sendMessage(msg: String) {
         try {
-            SinksUtils.tryEmit(skins, msg)
+            SinksUtils.tryEmit(skins, msg, 20)
         } catch (e: Exception) {
             log.error("send message to redis error!", e)
         }

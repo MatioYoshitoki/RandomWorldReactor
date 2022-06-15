@@ -7,14 +7,20 @@ import com.rw.random.infra.config.TaskProperties
 import com.rw.random.infra.handler.TaskHandler
 import com.rw.random.infra.handler.WorldMessageDispatchHandler
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate
+import org.springframework.data.redis.core.ScanOptions
 import org.springframework.stereotype.Component
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 interface FishRepository {
 
     fun findOne(fishId: Long): Mono<Fish>
 
+    fun findAll(): Flux<Fish>
+
     fun saveOne(fish: Fish): Mono<Void>
+
+    fun deleteOne(fishId: Long): Mono<Void>
 
 }
 
@@ -40,26 +46,28 @@ open class FishRepositoryImpl(
                 }
                 true
             }
-            .map {
-                Fish(
-                    it["id"]!!.toLong(),
-                    it["name"]!!.toString(),
-                    it["hasMaster"]!!.toBoolean(),
-                    it["weight"]!!.toLong(),
-                    it["maxHeal"]!!.toInt(),
-                    it["heal"]!!.toInt(),
-                    it["recoverSpeed"]!!.toInt(),
-                    it["atk"]!!.toInt(),
-                    it["def"]!!.toInt(),
-                    it["earnSpeed"]!!.toLong(),
-                    it["dodge"]!!.toInt(),
-                    it["money"]!!.toLong(),
-                    taskProperties,
-                    worldMessageDispatchHandler.worldChannel,
-                    taskHandler.taskHandler,
-                    BeingStatus.valueOf(it["status"]!!),
-                    RWPersonality(it["personalityId"]!!.toInt(), it["personalityRandomRate"]!!.toInt())
-                )
+            .map { convertToFish(it) }
+    }
+
+    override fun findAll(): Flux<Fish> {
+        val option = ScanOptions.ScanOptionsBuilder().match("fish:*").build()
+        return redisTemplate.scan(option)
+            .flatMap { key ->
+                redisTemplate.opsForHash<String, String>()
+                    .entries(key)
+                    .collectList()
+                    .map { list ->
+                        list.associate { Pair(it.key, it.value) }
+                    }
+                    .filter {
+                        for (k in Fish.KEYS) {
+                            if (!it.containsKey(k)) {
+                                return@filter false
+                            }
+                        }
+                        true
+                    }
+                    .map { convertToFish(it) }
             }
     }
 
@@ -90,6 +98,33 @@ open class FishRepositoryImpl(
             }
             .then()
 
+    }
+
+    override fun deleteOne(fishId: Long): Mono<Void> {
+        return redisTemplate.delete(getKey(fishId))
+            .then()
+    }
+
+    private fun convertToFish(map: Map<String, String>): Fish {
+        return Fish(
+            map["id"]!!.toLong(),
+            map["name"]!!.toString(),
+            map["hasMaster"]!!.toBoolean(),
+            map["weight"]!!.toLong(),
+            map["maxHeal"]!!.toInt(),
+            map["heal"]!!.toInt(),
+            map["recoverSpeed"]!!.toInt(),
+            map["atk"]!!.toInt(),
+            map["def"]!!.toInt(),
+            map["earnSpeed"]!!.toLong(),
+            map["dodge"]!!.toInt(),
+            map["money"]!!.toLong(),
+            taskProperties,
+            worldMessageDispatchHandler.worldChannel,
+            taskHandler.taskHandler,
+            BeingStatus.valueOf(map["status"]!!),
+            RWPersonality(map["personalityId"]!!.toInt(), map["personalityRandomRate"]!!.toInt())
+        )
     }
 
     private fun getKey(fishId: Long): String {

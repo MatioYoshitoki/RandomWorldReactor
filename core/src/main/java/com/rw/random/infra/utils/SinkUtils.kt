@@ -12,21 +12,24 @@ object SinksUtils {
 
     @Throws
     fun <T> tryEmit(sink: Sinks.Many<in T>, item: T, timeout: Int = 10) {
-
-        var remainingTime = 0
-        if (timeout > 0) {
-            remainingTime = timeout
-        }
-
-        val parkTimeout = 10L
-        val parkTimeoutNs = TimeUnit.MILLISECONDS.toNanos(parkTimeout)
-        while (!tryEmit(sink, item)) {
-            remainingTime -= parkTimeout.toInt()
-            if (timeout >= 0 && remainingTime <= 0) {
+        synchronized(this) {
+//            var remainingTime = 0
+//            if (timeout > 0) {
+//                remainingTime = timeout
+//            }
+//            val parkTimeout = 10L
+//            val parkTimeoutNs = TimeUnit.MILLISECONDS.toNanos(parkTimeout)
+            if (!tryEmit(sink, item)) {
                 throw IllegalStateException("The [$sink] overflow or non serialized")
             }
-            log.debug("Sink emit failed and retry")
-            LockSupport.parkNanos(parkTimeoutNs)
+//            while (!tryEmit(sink, item)) {
+//                remainingTime -= parkTimeout.toInt()
+//                if (timeout >= 0 && remainingTime <= 0) {
+//                    throw IllegalStateException("The [$sink] overflow or non serialized")
+//                }
+//                log.debug("Sink emit failed and retry")
+//                LockSupport.parkNanos(parkTimeoutNs)
+//            }
         }
     }
 

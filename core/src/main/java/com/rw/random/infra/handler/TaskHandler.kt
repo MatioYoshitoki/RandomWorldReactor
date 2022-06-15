@@ -24,7 +24,7 @@ open class TaskHandler(
 
     private fun pushTask(task: RWTask) {
         try {
-            SinksUtils.tryEmit(taskHandler, task)
+            SinksUtils.tryEmit(taskHandler, task, 20)
         } catch (e: Exception) {
             log.error("push task failed!", e)
         }

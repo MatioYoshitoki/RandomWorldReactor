@@ -38,7 +38,7 @@ open class WorldMessageDispatchHandler(
 
     fun sendMsg(event: RWEvent) {
         try {
-            SinksUtils.tryEmit(worldChannel, event)
+            SinksUtils.tryEmit(worldChannel, event, 20)
         } catch (e: Exception) {
             log.error("send msg failed!", e)
         }

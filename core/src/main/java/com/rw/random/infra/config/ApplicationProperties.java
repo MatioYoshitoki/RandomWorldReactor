@@ -13,12 +13,21 @@ public class ApplicationProperties {
     private Integer eventChannelSize = 2048;
     private Integer taskChannelSize = 1024;
     private Long workId = 1L;
+    private Long initFishCount = 10L;
 
     private Long loadTestFishCount = 1000L;
 
     private Long dataCenterId = 1L;
 
     private Map<String, ObjectInitProperties> objects = new HashMap<>();
+
+    public Long getInitFishCount() {
+        return initFishCount;
+    }
+
+    public void setInitFishCount(Long initFishCount) {
+        this.initFishCount = initFishCount;
+    }
 
     public Map<String, ObjectInitProperties> getObjects() {
         return objects;
