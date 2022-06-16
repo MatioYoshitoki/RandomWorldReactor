@@ -153,7 +153,7 @@ open class BeAtkEvent(
     target: RWObject,
     success: Boolean,
     val ct: Boolean,
-    damage: Int,
+    val damage: Int,
 ) : InternalEvent(eventId, eventType, topic, source, target) {
     init {
         msg = if (success) {
@@ -162,4 +162,12 @@ open class BeAtkEvent(
             "${source.name} 受到【${target.name}】攻击, 但未命中。"
         }
     }
+
+    override fun toString(): String {
+        return """
+        {"source_name": "${source?.name}", "source_id": ${source?.id}, "target_name": "${target?.name}", "target_id": ${target?.id}, "event_type": "$eventType", "damage": $damage, "ct": $ct}
+        """.trimIndent()
+    }
+
+
 }

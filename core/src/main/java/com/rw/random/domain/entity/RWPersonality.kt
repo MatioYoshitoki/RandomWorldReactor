@@ -7,6 +7,7 @@ import reactor.util.function.Tuple3
 import reactor.util.function.Tuples
 import java.util.*
 import kotlin.reflect.KClass
+import kotlin.streams.toList
 
 open class RWPersonality(
     val personality: Int,
@@ -205,10 +206,10 @@ open class RWPersonality(
                 if (event is ATKEvent) {
                     ATKTask(obj, event.source!! as Being)
                 } else {
-                    log.debug("敌人数量: {}", obj.findAllHumanSameZone().count())
-                    val target = obj.findAllHumanSameZone().filter { it != obj }.findAny()
-                    if (target.isPresent) {
-                        ATKTask(obj, target.get())
+                    val target = RandomUtil.randomEleList(obj.findAllHumanSameZone().filter { it != obj }.toList(), 1)
+                    if (target.size == 1) {
+                        log.info("random atk target: ${target.first().name}")
+                        ATKTask(obj, target.first())
                     } else {
                         null
                     }

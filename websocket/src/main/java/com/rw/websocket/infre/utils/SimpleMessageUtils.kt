@@ -14,6 +14,7 @@ object SimpleMessageUtils {
     const val SESSION_DESTINATION_PREFIX = "/topic/session/"
     const val USER_DESTINATION_PREFIX = "/topic/user/"
     const val WORLD_DESTINATION_PREFIX = "/topic/world"
+    const val OWNER_DESTINATION_PREFIX = "/topic/owner/"
 
     const val FIELD_USER_ID = "user_id"
 
@@ -64,5 +65,21 @@ object SimpleMessageUtils {
         return WORLD_DESTINATION_PREFIX
     }
 
+    fun isOwnerDestination(dest: String): Boolean {
+        return dest.startsWith(OWNER_DESTINATION_PREFIX)
+    }
+
+    fun legalDestination(dest: String?): Boolean {
+        if (dest.isNullOrBlank()) {
+            return false
+        }
+        if (dest.startsWith(USER_DESTINATION_PREFIX) || dest.startsWith(SESSION_DESTINATION_PREFIX) || dest.startsWith(
+                WORLD_DESTINATION_PREFIX
+            ) || dest.startsWith(OWNER_DESTINATION_PREFIX)
+        ) {
+            return true
+        }
+        return false
+    }
 
 }

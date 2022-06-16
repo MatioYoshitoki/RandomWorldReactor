@@ -1,19 +1,31 @@
 package com.rw.random.common.dto
 
+import com.fasterxml.jackson.annotation.JsonProperty
+
 data class RedisStreamMessage(
-    var sourceName: String?,
-    var sourceId: Long?,
-    var targetName: String?,
-    var targetId: Long?,
-    var eventType: String?,
-    var level: Int?,
-    var message: String?
+//    @JsonProperty("source_name")
+//    var sourceName: String? = null,
+//    @JsonProperty("source_id")
+//    var sourceId: Long? = null,
+//    @JsonProperty("target_name")
+//    var targetName: String? = null,
+//    @JsonProperty("target_id")
+//    var targetId: Long? = null,
+//    @JsonProperty("event_type")
+//    var eventType: String? = null,
+//    @JsonProperty("level")
+//    var level: Int? = null,
+//    @JsonProperty("message")
+//    var message: String? = null,
+    @JsonProperty("dest")
+    var dest: String? = null,
+    @JsonProperty("__PAYLOAD")
+    var payload: Any? = null
 ) {
-    constructor() : this(null, null, null, null, null, null, null)
 
     override fun toString(): String {
         return """
-            {"source_name": "$sourceName", "source_id": $sourceId, "target_name": "$targetName", "target_id": $targetId, "event_type": "$eventType", "level": $level, "message": "$message"}
+            {"dest": "$dest", "__PAYLOAD": $payload}
         """.trimIndent()
     }
 }

@@ -1,5 +1,6 @@
 package com.rw.random.infra.handler
 
+import com.rw.random.domain.entity.RWEvent
 import com.rw.random.domain.repository.RedisPubsubRepository
 import com.rw.random.infra.utils.SinksUtils
 import org.slf4j.LoggerFactory
@@ -29,7 +30,29 @@ open class PubsubMessageHandler(
             .subscribe()
     }
 
-    fun sendMessage(msg: String) {
+    fun sendToWorld(event: RWEvent) {
+        val message = """
+            {"dest": "/topic/world", "__PAYLOAD": $event}
+        """.trimIndent()
+        sendMessage(message)
+    }
+
+    fun sendToOwner(event: RWEvent) {
+        if (event.source?.id != null) {
+            val message = """
+            {"dest": "/topic/owner/${event.source.id}", "__PAYLOAD": $event}
+        """.trimIndent()
+            sendMessage(message)
+        }
+        if (event.target?.id != null) {
+            val message = """
+            {"dest": "/topic/owner/${event.target.id}", "__PAYLOAD": $event}
+        """.trimIndent()
+            sendMessage(message)
+        }
+    }
+
+    private fun sendMessage(msg: String) {
         try {
             SinksUtils.tryEmit(skins, msg, 20)
         } catch (e: Exception) {

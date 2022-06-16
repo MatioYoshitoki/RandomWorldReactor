@@ -1,7 +1,7 @@
 logging:
   level:
     root: INFO
-    com.rw.random: DEBUG
+    com.rw.random: INFO
 spring:
   redis:
     host: 127.0.0.1

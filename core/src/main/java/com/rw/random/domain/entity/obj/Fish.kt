@@ -129,7 +129,7 @@ open class Fish(
     private fun beAtk(event: ATKEvent) {
         val rate = RandomUtil.randomInt(100)
         if (rate < this.dodge) {
-            log.debug("${this.name} 受到【${event.source!!.name}】攻击, 但未命中！")
+            log.info("${this.name} 受到【${event.source!!.name}】攻击, 但未命中！")
             sendMsg(
                 BeAtkEvent(
                     System.currentTimeMillis(), "BeAtk", this.topic, this, event.source,
@@ -149,7 +149,7 @@ open class Fish(
                     damage = damage
                 )
             )
-            log.debug("${this.name} 受到【${event.source.name}】攻击, 生命值减少${damage}。剩余生命值: ${this.heal}")
+            log.info("${this.name} 受到【${event.source.name}】攻击, 生命值减少${damage}。剩余生命值: ${this.heal}")
         }
 
     }

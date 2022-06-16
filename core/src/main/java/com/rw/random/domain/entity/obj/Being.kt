@@ -89,9 +89,10 @@ open class Being(
         val excludeTask = taskCountDownMap.filter {
             it.value + (taskProperties.countDown[it.key.simpleName] ?: 0) >= currentTime
         }.keys
-        log.debug("name: $name, task count down map: $taskCountDownMap, exclude task: $excludeTask")
         val task = nextTask(event, excludeTask)
-        log.debug("name: $name, task: $task")
+        if (task is ATKTask) {
+            log.info("because of ${event.eventType} $name to ${task.target!!.name} ATK time: ${System.currentTimeMillis()}")
+        }
         if (task != null) {
             taskCountDownMap[task::class] = System.currentTimeMillis()
             pushTask(task)
@@ -100,7 +101,6 @@ open class Being(
 
     open fun nextTask(event: RWEvent, excludeTask: Set<KClass<out RWTask>>): RWTask? {
         val rate = Math.random()
-        log.debug("name:$name rate: $rate")
         return when (event) {
             is ATKEvent -> {
                 if (rate < 0.05) {

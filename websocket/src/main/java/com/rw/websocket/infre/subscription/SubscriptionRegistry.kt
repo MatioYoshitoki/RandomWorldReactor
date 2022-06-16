@@ -99,7 +99,7 @@ open class SubscriptionRegistry {
         return sessionSubscriptions[sessionId]?.any { subscriptions[it]?.topic == topic } ?: false
     }
 
-    fun getTopicSubscriptions(topic: TopicPattern): List<Subscription> {
+    private fun getTopicSubscriptions(topic: TopicPattern): List<Subscription> {
         return topicSubscriptions[topic]?.map { subscriptionId ->
             subscriptions[subscriptionId]!!
         } ?: emptyList()

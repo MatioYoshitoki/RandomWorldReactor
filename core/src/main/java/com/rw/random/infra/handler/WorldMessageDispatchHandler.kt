@@ -1,6 +1,7 @@
 package com.rw.random.infra.handler
 
 import cn.hutool.core.lang.Snowflake
+import cn.hutool.core.lang.Tuple
 import com.rw.random.common.constants.BeingStatus
 import com.rw.random.domain.entity.*
 import com.rw.random.domain.entity.obj.Being
@@ -19,6 +20,7 @@ import reactor.core.publisher.Mono
 import reactor.core.publisher.Sinks
 import reactor.core.scheduler.Schedulers
 import reactor.util.concurrent.Queues
+import reactor.util.function.Tuples
 
 @Component
 open class WorldMessageDispatchHandler(
@@ -58,40 +60,35 @@ open class WorldMessageDispatchHandler(
             .onErrorContinue { err, it ->
                 log.error("dispatch error!", err, it)
             }
-            .subscribe { event ->
-                if (event.target != null && event.target is Being) {
-                    if (!event.target.isAlive()) {
-                        return@subscribe
-                    }
-                }
-                val flux = if (event is TimeEvent) {
+            .filter { it.target == null || it.target !is Being || it.target.isAlive() }
+            .flatMap { event ->
+                if (event is TimeEvent) {
                     subscriptionRegistry.findAllObjByTopic(event.topic)
+                        .map { Tuples.of(it, event) }
                 } else {
                     if (event.source != null && event.target != null) {
-                        Flux.just(event.target.id, event.source.id)
+                        Flux.just(Tuples.of(event.target.id, event), Tuples.of(event.source.id, event))
                     } else if (event.source != null) {
-                        Flux.just(event.source.id)
+                        Flux.just(Tuples.of(event.source.id, event))
                     } else if (event.target != null) {
-                        Flux.just(event.target.id)
+                        Flux.just(Tuples.of(event.target.id, event))
                     } else {
                         Flux.empty()
                     }
                 }
-                flux
-                    .map { subscriptionRegistry.findConsumerByObjId(it) }
-                    .filter { it.isPresent }
-                    .subscribeOn(Schedulers.boundedElastic())
-                    .subscribe { it.get().accept(event) }
+            }
+            .map { Tuples.of(subscriptionRegistry.findConsumerByObjId(it.t1), it.t2) }
+            .filter { it.t1.isPresent }
+            .subscribeOn(Schedulers.boundedElastic())
+            .subscribe {
+                it.t1.get().accept(it.t2)
             }
     }
 
     private fun pushMessageToClient(event: RWEvent) {
         // 可配置的消息转发类型
         if (applicationProperties.messageTypeNeedToSend.contains(event.eventType)) {
-            val message = """
-            {"source_name": "${event.source?.name}", "source_id": ${event.source?.id}, "target_name": "${event.target?.name}", "target_id": ${event.target?.id}, "event_type": "${event.eventType}", "level": 1, "message": "${event.msg}"}
-            """.trimIndent()
-            pubsubMessageHandler.sendMessage(message)
+            pubsubMessageHandler.sendToOwner(event)
         }
     }
 
