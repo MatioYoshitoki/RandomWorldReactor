@@ -37,7 +37,7 @@ open class JWTFilter(tokenProvider: TokenProvider) : WebFilter {
 
     private fun resolveToken(request: ServerHttpRequest): String? {
         val bearerToken = request.headers.getFirst(HttpConstants.AUTHORIZATION_HEADER)
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(HttpConstants.BEARER_PREFIX)) {
+        if (!bearerToken.isNullOrBlank() && bearerToken.startsWith(HttpConstants.BEARER_PREFIX)) {
             return bearerToken.substring(7)
         }
         val queryParams = request.queryParams
