@@ -51,7 +51,7 @@ open class ApplicationConfiguration(
         handler: RandomWorldWebSocketHandler
     ): HandlerMapping {
         val map: HashMap<String, WebSocketHandler> = HashMap()
-        map["/"] = handler
+        map["/enjoy"] = handler
         val order = -1
         return SimpleUrlHandlerMapping(map, order)
     }

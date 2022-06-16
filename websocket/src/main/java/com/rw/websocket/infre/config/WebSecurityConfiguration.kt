@@ -28,7 +28,7 @@ import org.springframework.security.web.server.util.matcher.OrServerWebExchangeM
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers
 import org.zalando.problem.spring.webflux.advice.security.SecurityProblemSupport
 
-//import org.zalando.problem.spring.webflux.advice.security.SecurityProblemSupport;
+/* import org.zalando.problem.spring.webflux.advice.security.SecurityProblemSupport; */
 
 
 @Configuration
@@ -36,7 +36,7 @@ import org.zalando.problem.spring.webflux.advice.security.SecurityProblemSupport
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
 @Import(SecurityProblemSupport::class)
-open class WebsocketSecurityConfiguration(
+open class WebSecurityConfiguration(
     private val tokenProvider: TokenProvider,
     private val problemSupport: SecurityProblemSupport,
     private val accessManager: RWReactiveAccessManager
