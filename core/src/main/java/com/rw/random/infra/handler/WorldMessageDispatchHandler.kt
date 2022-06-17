@@ -88,7 +88,7 @@ open class WorldMessageDispatchHandler(
     private fun pushMessageToClient(event: RWEvent) {
         // 可配置的消息转发类型
         if (applicationProperties.messageTypeNeedToSend.contains(event.eventType)) {
-            pubsubMessageHandler.sendToOwner(event)
+            pubsubMessageHandler.sendToUser(event)
         }
     }
 

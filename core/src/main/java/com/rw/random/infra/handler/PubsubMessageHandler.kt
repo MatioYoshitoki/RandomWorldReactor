@@ -52,6 +52,21 @@ open class PubsubMessageHandler(
         }
     }
 
+    fun sendToUser(event: RWEvent) {
+        if (event.source?.hasMaster != null && event.source.hasMaster && event.source.masterId != null) {
+            val message = """
+            {"dest": "/topic/user/${event.source.masterId}", "__PAYLOAD": $event}
+        """.trimIndent()
+            sendMessage(message)
+        }
+        if ((event.target?.hasMaster != null && event.target.hasMaster && event.target.masterId != null)) {
+            val message = """
+            {"dest": "/topic/user/${event.target.masterId}", "__PAYLOAD": $event}
+        """.trimIndent()
+            sendMessage(message)
+        }
+    }
+
     private fun sendMessage(msg: String) {
         try {
             SinksUtils.tryEmit(skins, msg, 20)

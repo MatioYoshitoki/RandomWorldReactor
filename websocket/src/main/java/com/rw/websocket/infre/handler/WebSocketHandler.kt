@@ -1,8 +1,10 @@
 package com.rw.websocket.infre.handler
 
+import com.rw.random.common.utils.SecurityUtils
 import com.rw.websocket.infre.messaging.MapMessage
 import com.rw.websocket.infre.session.DefaultRandomWorldSessionManager
 import com.rw.websocket.infre.session.SessionMetadataUtils
+import com.rw.websocket.infre.utils.SimpleMessageUtils
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.ApplicationEventPublisherAware
@@ -23,7 +25,6 @@ class RandomWorldWebSocketHandler(
     private val sessionManager: DefaultRandomWorldSessionManager,
     private val incomingHandler: IncomingHandler,
     private val outgoingHandler: OutgoingHandler,
-    private val randomWorldSessionManager: DefaultRandomWorldSessionManager
 ) : WebSocketHandler, ApplicationEventPublisherAware {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -32,6 +33,7 @@ class RandomWorldWebSocketHandler(
     override fun handle(session: WebSocketSession): Mono<Void> {
         val brokerSession = sessionManager.getOrCreate(session)
         val channel = brokerSession.channel
+
         return Mono.zip(
             subscribeIncomingMessages(session),
             session.send(subscribeOutgoingMessages(session, channel))
@@ -50,7 +52,7 @@ class RandomWorldWebSocketHandler(
                 incomingHandler.handleMessageFromClient(session, it)
             }
             .onErrorResume { err ->
-                val uid = SessionMetadataUtils.getUid(randomWorldSessionManager.getMetadata(session.id))
+                val uid = SessionMetadataUtils.getUid(sessionManager.getMetadata(session.id))
                 when (err) {
                     is AbortedException -> {
                         log.warn("[sessionId={}, uid={}] {}", session.id, uid, err.message)
@@ -110,7 +112,6 @@ class RandomWorldWebSocketHandler(
         log.warn("client close[sessionId=$sessionId, status=$status]")
 //        this.eventPublisher.publishEvent(ConnectionClosedEvent.of(sessionId, status))
     }
-
 
     override fun setApplicationEventPublisher(applicationEventPublisher: ApplicationEventPublisher) {
         this.eventPublisher = applicationEventPublisher

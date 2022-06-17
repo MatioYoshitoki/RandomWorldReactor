@@ -138,6 +138,7 @@ open class UserServiceImpl(
 
     override fun bindUserFish(userId: Long, fishId: Long): Mono<UserFish> {
         return userFishRepository.addOne(userId, fishId)
+            .delayUntil { fishRepository.updateMasterId(fishId, userId) }
     }
 
     override fun getUserFish(fishId: Long): Mono<UserFish> {

@@ -36,21 +36,11 @@ open class RedisPubSubBrokerRelayReceiver(
             RedisKeyConstants.REDIS_CHANNEL_KEY
         )
             .doOnNext {
-                log.info("receive message from channel: ${it.message}")
+                log.trace("receive message from channel: ${it.message}")
             }
             .map {
                 objectMapper.readValue(it.message, RedisStreamMessage::class.java)
             }
-//            .doOnNext {
-//                log.info("receive message from redis: {}", it)
-//            }
-//            .filter { it.level!! <= 1 }
-//            .groupBy {
-//                it!!.dest
-//            }
-//            .flatMap {
-//                aggMessageFlux(it)
-//            }
             .onErrorResume { err ->
                 log.error("Build message failed, err_msg={}", err.message, err)
                 Mono.empty()
@@ -122,6 +112,10 @@ open class RedisPubSubBrokerRelayReceiver(
 //                        log.info("send msg: {}", sendMsg.payloadAsText)
                         it.send(Mono.just(sendMsg))
                     }
+            }
+            .onErrorResume {
+                log.error("SEND ERROR", it)
+                Mono.empty()
             }
             .subscribe()
     }

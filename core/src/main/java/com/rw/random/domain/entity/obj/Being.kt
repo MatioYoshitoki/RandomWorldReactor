@@ -17,6 +17,7 @@ open class Being(
     id: Long,
     name: String,
     hasMaster: Boolean = false,
+    masterId: Long? = null,
     var heal: Int = 800 + (Math.random() * 800).toInt(),
     open var atk: Int = 100 + (Math.random() * 200).toInt(),
     taskProperties: TaskProperties,
@@ -26,7 +27,7 @@ open class Being(
     var money: Long = (Math.random() * 200).toLong(),
     var status: BeingStatus = BeingStatus.ALIVE
 ) : RWObject(
-    id, name, hasMaster, taskProperties, sound, taskChannel
+    id, name, hasMaster, masterId, taskProperties, sound, taskChannel
 ) {
 
     val log: Logger = LoggerFactory.getLogger(javaClass)

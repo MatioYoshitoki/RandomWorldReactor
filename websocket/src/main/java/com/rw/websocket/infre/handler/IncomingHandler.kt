@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.async_.JsonFactory
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.ObjectReader
+import com.rw.random.common.utils.SecurityUtils
+import com.rw.websocket.app.service.UserService
 import com.rw.websocket.infre.contants.ActionTypes
 import com.rw.websocket.infre.contants.HttpConstants
 import com.rw.websocket.infre.session.DefaultRandomWorldSessionManager
@@ -31,6 +33,7 @@ open class IncomingHandler(
     private val objectMapper: ObjectMapper,
     private val brokerSessionManager: DefaultRandomWorldSessionManager,
     private val subscriptionRegistry: SubscriptionRegistry,
+    private val userService: UserService
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -70,10 +73,12 @@ open class IncomingHandler(
                 log.debug("Receive message from client: {}, {}", it.t1, it.t2)
             }
             .map { MessageBuilder.withPayload(it.t1).copyHeaders(it.t2).build() }
-            .doOnNext {
+            .delayUntil {
                 // 订阅默认渠道，并初始化 metadata
                 if (SimpleMessageUtils.getActionType(it) == ActionTypes.LOGIN) {
                     initChannelsAndMetadata(it, session)
+                } else {
+                    Mono.empty<Void>()
                 }
             }
             .map {
@@ -87,27 +92,31 @@ open class IncomingHandler(
             .then()
     }
 
-    private fun initChannelsAndMetadata(message: Message<*>, session: WebSocketSession) {
-        val headers = session.handshakeInfo.headers
-        val metadata: MutableMap<String, Any> = hashMapOf()
-        val ip = SimpleMessageUtils.getRemoteIp(message)
-        if (ip.isNullOrBlank()) {
-            return
-        }
-        metadata[DefaultRandomWorldSessionManager.IP_KEY] = ip
-        val uid = SimpleMessageUtils.getUserId(message) ?: -1
-        metadata[DefaultRandomWorldSessionManager.UID_KEY] = uid
-
-        log.info("Subscribe message={}, metadata={}", message, metadata)
+    private fun initChannelsAndMetadata(message: Message<*>, session: WebSocketSession): Mono<Void> {
+        return session.handshakeInfo.principal
+            .flatMap {
+                userService.getUserByUserName(it.name)
+            }
+            .doOnNext {
+                log.debug("user login: ${it.id}")
+                val metadata: MutableMap<String, Any> = hashMapOf()
+                val ip = SimpleMessageUtils.getRemoteIp(message)
+                metadata[DefaultRandomWorldSessionManager.IP_KEY] = ip ?: ""
+                val uid = it.id
+                metadata[DefaultRandomWorldSessionManager.UID_KEY] = uid
+                log.info("Subscribe message={}, metadata={}", message, metadata)
 //        subscriptionsRegistry.initSubscribeChannels(message)
-        // 订阅 session 频道
-        subscriptionRegistry.subscribe(session.id, SimpleMessageUtils.buildSessionDestination(session.id))
-        // 订阅 user 频道
-        subscriptionRegistry.subscribe(session.id, SimpleMessageUtils.buildUserDestination(uid))
-        // 订阅 world 频道
-        subscriptionRegistry.subscribe(session.id, SimpleMessageUtils.buildWorldDestination())
-        // 初始化元数据
-        brokerSessionManager.setMetadata(session.id, metadata)
+                // 订阅 session 频道
+//                subscriptionRegistry.subscribe(session.id, SimpleMessageUtils.buildSessionDestination(session.id))
+                // 订阅 user 频道
+                subscriptionRegistry.subscribe(session.id, SimpleMessageUtils.buildUserDestination(uid))
+                // 订阅 world 频道
+                subscriptionRegistry.subscribe(session.id, SimpleMessageUtils.buildWorldDestination())
+                // 初始化元数据
+                brokerSessionManager.setMetadata(session.id, metadata)
+            }
+            .then()
+
     }
 
     @Suppress("DuplicatedCode")

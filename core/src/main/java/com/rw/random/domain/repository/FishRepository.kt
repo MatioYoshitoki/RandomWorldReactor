@@ -6,6 +6,7 @@ import com.rw.random.domain.entity.obj.Fish
 import com.rw.random.infra.config.TaskProperties
 import com.rw.random.infra.handler.TaskHandler
 import com.rw.random.infra.handler.WorldMessageDispatchHandler
+import org.slf4j.LoggerFactory
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate
 import org.springframework.data.redis.core.ScanOptions
 import org.springframework.stereotype.Component
@@ -31,6 +32,9 @@ open class FishRepositoryImpl(
     private val worldMessageDispatchHandler: WorldMessageDispatchHandler,
     private val taskHandler: TaskHandler
 ) : FishRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
     override fun findOne(fishId: Long): Mono<Fish> {
         return redisTemplate.opsForHash<String, String>()
             .entries(getKey(fishId))
@@ -74,7 +78,7 @@ open class FishRepositoryImpl(
     override fun saveOne(fish: Fish): Mono<Void> {
         return Mono.just(fish)
             .map {
-                mutableMapOf(
+                val map = mutableMapOf(
                     "id" to it.id.toString(),
                     "name" to it.name,
                     "hasMaster" to it.hasMaster.toString(),
@@ -91,6 +95,10 @@ open class FishRepositoryImpl(
                     "personalityId" to it.personality.personality.toString(),
                     "personalityRandomRate" to it.personality.originRandomRate.toString()
                 )
+                if (it.masterId?.toString() != null) {
+                    map["masterId"] = it.masterId.toString()
+                }
+                map
             }
             .flatMap { map ->
                 redisTemplate.opsForHash<String, String>()
@@ -110,6 +118,7 @@ open class FishRepositoryImpl(
             map["id"]!!.toLong(),
             map["name"]!!.toString(),
             map["hasMaster"]!!.toBoolean(),
+            map["masterId"]?.toLong(),
             map["weight"]!!.toLong(),
             map["maxHeal"]!!.toInt(),
             map["heal"]!!.toInt(),
