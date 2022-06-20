@@ -1,5 +1,6 @@
 package com.rw.random.infra.handler
 
+import com.rw.random.domain.entity.ObjectDestroyEvent
 import com.rw.random.domain.entity.RWEvent
 import com.rw.random.domain.repository.RedisPubsubRepository
 import com.rw.random.infra.utils.SinksUtils
@@ -53,16 +54,21 @@ open class PubsubMessageHandler(
     }
 
     fun sendToUser(event: RWEvent) {
+        if (event is ObjectDestroyEvent) {
+            log.info("try to send DESTROY event: target=${event.target?.masterId} ${event.target?.hasMaster}, source=${event.source?.masterId} ${event.source?.hasMaster}")
+        }
         if (event.source?.hasMaster != null && event.source.hasMaster && event.source.masterId != null) {
             val message = """
             {"dest": "/topic/user/${event.source.masterId}", "__PAYLOAD": $event}
         """.trimIndent()
+            log.info("send to channel: $message")
             sendMessage(message)
         }
         if ((event.target?.hasMaster != null && event.target.hasMaster && event.target.masterId != null)) {
             val message = """
             {"dest": "/topic/user/${event.target.masterId}", "__PAYLOAD": $event}
         """.trimIndent()
+            log.info("send to channel: $message")
             sendMessage(message)
         }
     }

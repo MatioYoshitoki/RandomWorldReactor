@@ -42,7 +42,7 @@ open class RedisPubSubBrokerRelayReceiver(
                 objectMapper.readValue(it.message, RedisStreamMessage::class.java)
             }
             .onErrorResume { err ->
-                log.error("Build message failed, err_msg={}", err.message, err)
+                log.error("Build message failed, err_msg={}, message={}", err.message, err)
                 Mono.empty()
             }
     }

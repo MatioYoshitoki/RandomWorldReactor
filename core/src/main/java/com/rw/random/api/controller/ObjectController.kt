@@ -8,6 +8,7 @@ import com.rw.random.domain.dto.FishIdRequest
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
 
@@ -20,8 +21,8 @@ open class ObjectController(
 ) {
 
     @PostMapping("/enter")
-    fun enter(): Mono<RWResult<Long>> {
-        return enterObjectUseCase.runCase()
+    fun enter(@RequestParam("master_id") masterId: Long?): Mono<RWResult<Long>> {
+        return enterObjectUseCase.runCase(masterId)
             .map {
                 RWResult.success("Enter Success!", it)
             }

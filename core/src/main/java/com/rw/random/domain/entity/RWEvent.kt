@@ -94,6 +94,12 @@ open class ObjectDestroyEvent(
     init {
         msg = "${source.name} 被销毁！"
     }
+
+    override fun toString(): String {
+        return """
+        {"source_name": "${source?.name}", "source_id": ${source?.id}, "target_name": "${target?.name}", "target_id": ${target?.id}, "event_type": "$eventType"}
+        """.trimIndent()
+    }
 }
 
 // 养鱼所需

@@ -55,7 +55,7 @@ open class FishCreateUseCaseImpl(
                 if (!enoughMoney) {
                     Mono.error(EnterFishException("${applicationProperties.moneyName}不足！"))
                 } else {
-                    requestCoreObjEnter()
+                    requestCoreObjEnter(userId)
                         .flatMap { result ->
                             if (result.errno == 0) {
                                 val fishId = result.data.toString().toLong()
@@ -72,9 +72,9 @@ open class FishCreateUseCaseImpl(
             }
     }
 
-    private fun requestCoreObjEnter(): Mono<RWResult<*>> {
+    private fun requestCoreObjEnter(masterId: Long): Mono<RWResult<*>> {
         return webClient.post()
-            .uri(URI.create(applicationProperties.coreUrl + "/api/v1/object/enter"))
+            .uri(URI.create(applicationProperties.coreUrl + "/api/v1/object/enter?master_id=$masterId"))
             .retrieve()
             .bodyToMono(RWResult::class.java)
             .filter { it.errno == 0 }

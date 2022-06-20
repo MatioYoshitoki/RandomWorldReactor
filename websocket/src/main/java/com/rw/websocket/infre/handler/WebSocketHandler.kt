@@ -84,7 +84,7 @@ class RandomWorldWebSocketHandler(
         val fx = channel
             .asFlux()
             .doOnNext {
-                log.debug("MessageFlux: {}", it)
+                log.info("MessageFlux: {}", it)
             }
             .filter {
                 if (it.payload is MapMessage) {

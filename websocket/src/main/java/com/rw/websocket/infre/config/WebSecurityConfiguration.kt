@@ -1,6 +1,7 @@
 package com.rw.websocket.infre.config
 
 //import com.rw.random.common.filter.JWTConfigurer
+
 import com.rw.random.common.constants.AuthoritiesConstants
 import com.rw.random.common.filter.JWTFilter
 import com.rw.random.common.security.RWReactiveAccessManager
@@ -11,6 +12,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Import
+import org.springframework.core.annotation.Order
 import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.ReactiveAuthenticationManager
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager
@@ -26,7 +28,12 @@ import org.springframework.security.web.server.header.ReferrerPolicyServerHttpHe
 import org.springframework.security.web.server.util.matcher.NegatedServerWebExchangeMatcher
 import org.springframework.security.web.server.util.matcher.OrServerWebExchangeMatcher
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers
+import org.springframework.web.cors.CorsConfiguration
+import org.springframework.web.cors.reactive.CorsWebFilter
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource
+import org.springframework.web.util.pattern.PathPatternParser
 import org.zalando.problem.spring.webflux.advice.security.SecurityProblemSupport
+
 
 /* import org.zalando.problem.spring.webflux.advice.security.SecurityProblemSupport; */
 
@@ -42,6 +49,24 @@ open class WebSecurityConfiguration(
     private val accessManager: RWReactiveAccessManager
 ) {
 
+    @Bean
+    @Order(-200) //非常重要，一定要早于AuthFilter
+    open fun corsFilter(): CorsWebFilter? {
+        val config = CorsConfiguration()
+        config.addAllowedOrigin("*")
+        config.addAllowedHeader("*")
+        //config.addAllowedMethod("*");
+        config.addAllowedMethod("OPTIONS")
+        config.addAllowedMethod("HEAD")
+        config.addAllowedMethod("GET")
+        config.addAllowedMethod("PUT")
+        config.addAllowedMethod("POST")
+        config.addAllowedMethod("DELETE")
+        config.addAllowedMethod("PATCH")
+        val source = UrlBasedCorsConfigurationSource(PathPatternParser())
+        source.registerCorsConfiguration("/**", config)
+        return CorsWebFilter(source)
+    }
 
     @Bean
     @ConditionalOnMissingBean

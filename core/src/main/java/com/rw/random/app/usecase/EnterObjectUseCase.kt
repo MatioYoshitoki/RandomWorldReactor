@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono
 
 interface EnterObjectUseCase {
 
-    fun runCase(): Mono<Long>
+    fun runCase(masterId: Long?): Mono<Long>
 
 }
 
@@ -30,10 +30,10 @@ open class EnterObjectUseCaseImpl(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    override fun runCase(): Mono<Long> {
+    override fun runCase(masterId: Long?): Mono<Long> {
         return Mono.just(RandomName.randomName(true, 2))
             .doOnNext { log.info("init $it") }
-            .map { randomFish(it) }
+            .map { randomFish(it, masterId) }
             .flatMap {
                 if (zone.enterZone(it)) {
                     Mono.just(it.id)
@@ -43,11 +43,12 @@ open class EnterObjectUseCaseImpl(
             }
     }
 
-    private fun randomFish(name: String): Fish {
+    private fun randomFish(name: String, masterId: Long?): Fish {
         return Fish(
             snowflake.nextId(),
             name,
             hasMaster = true,
+            masterId = masterId,
             taskProperties = taskProperties,
             sound = worldMessageDispatchHandler.worldChannel,
             taskChannel = taskHandler.taskHandler,
