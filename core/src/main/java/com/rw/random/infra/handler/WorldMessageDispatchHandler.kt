@@ -6,6 +6,7 @@ import com.rw.random.common.constants.BeingStatus
 import com.rw.random.domain.entity.*
 import com.rw.random.domain.entity.obj.Being
 import com.rw.random.domain.entity.obj.Fish
+import com.rw.random.domain.service.UserFishService
 import com.rw.random.infra.config.ApplicationProperties
 import com.rw.random.infra.listener.ObjectStatusModifyEvent
 import com.rw.random.infra.subscription.SubscriptionRegistry
@@ -26,6 +27,7 @@ import reactor.util.function.Tuples
 open class WorldMessageDispatchHandler(
     private val subscriptionRegistry: SubscriptionRegistry,
     private val snowflake: Snowflake,
+    private val userFishService: UserFishService,
     private val pubsubMessageHandler: PubsubMessageHandler,
     private val applicationProperties: ApplicationProperties,
     private val zone: RWZone
@@ -52,7 +54,15 @@ open class WorldMessageDispatchHandler(
             .publishOn(Schedulers.boundedElastic())
             .doOnNext { event ->
                 if (event is ObjectDestroyEvent) {
-                    Mono.just(1).subscribe { destroyObj(event) }
+                    Mono.just(1)
+                        .flatMap {
+                            if (event.source is Fish && event.source.hasMaster) {
+                                userFishService.changeFishStatusToDead(event.source)
+                            } else {
+                                Mono.empty()
+                            }
+                        }
+                        .subscribe { destroyObj(event) }
                 }
             }
             .doOnNext { event -> Mono.just(1).subscribe { pushMessageToClient(event) } }
@@ -108,7 +118,6 @@ open class WorldMessageDispatchHandler(
                     event.target
                 )
             )
-
         }
     }
 

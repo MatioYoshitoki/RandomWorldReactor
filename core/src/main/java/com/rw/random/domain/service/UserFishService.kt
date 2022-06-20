@@ -9,6 +9,7 @@ import reactor.core.publisher.Mono
 interface UserFishService {
     fun changeFishStatusToSleep(fish: Fish): Mono<Boolean>
     fun changeFishStatusToAlive(fish: Fish): Mono<Boolean>
+    fun changeFishStatusToDead(fish: Fish): Mono<Boolean>
 }
 
 @Service
@@ -36,6 +37,14 @@ open class UserFishServiceImpl(
                 } else {
                     Mono.just(false)
                 }
+            }
+    }
+
+    override fun changeFishStatusToDead(fish: Fish): Mono<Boolean> {
+        return Mono.just(fish)
+            .flatMap {
+                userFishRepository.updateStatus(fish.id, BeingStatus.DEAD)
+                    .thenReturn(true)
             }
     }
 }

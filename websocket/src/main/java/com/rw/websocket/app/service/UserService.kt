@@ -1,6 +1,7 @@
 package com.rw.websocket.app.service
 
 import cn.hutool.core.date.DatePattern
+import com.rw.random.common.constants.BeingStatus
 import com.rw.random.common.entity.UserFish
 import com.rw.websocket.domain.entity.User
 import com.rw.websocket.domain.entity.UserWithProperty
@@ -18,11 +19,12 @@ import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.switchIfEmpty
+import java.lang.Long.max
 import java.util.*
 
 interface UserService {
 
-    fun eatFish(fishId: Long, userName: String): Mono<Boolean>
+    fun eatFish(fishId: Long, fishStatus: Int, userName: String): Mono<Boolean>
 
     fun updateUserInfoCache(userName: String): Mono<UserWithProperty>
 
@@ -57,19 +59,19 @@ open class UserServiceImpl(
     private val fishRepository: FishRepository,
     private val userSignInRepository: UserSignInRepository
 ) : UserService {
-    override fun eatFish(fishId: Long, userName: String): Mono<Boolean> {
+    override fun eatFish(fishId: Long, fishStatus: Int, userName: String): Mono<Boolean> {
         return userRepository.findOneByUserName(userName)
             .flatMap {
                 userPropertyRepository.findOne(it.id)
             }
             .flatMap { property ->
                 fishRepository.findOne(fishId)
-                    .map { exchangeWeight2Exp(it.weight) }
+                    .map { exchangeWeight2Exp(it.weight, fishStatus) }
                     .filterWhen {
-                        userPropertyRepository.updateExp(property.id!!, property.exp ?: (0 + it))
+                        userPropertyRepository.updateExp(property.id!!, (property.exp ?: 0) + max(it, 1))
                     }
                     .map {
-                        property.exp ?: (0 + it)
+                        (property.exp ?: 0) + max(it, 1)
                     }
             }
             .flatMap {
