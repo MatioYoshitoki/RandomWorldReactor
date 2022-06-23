@@ -40,4 +40,9 @@ open class ApplicationConfiguration(
         return IdUtil.getSnowflake(applicationProperties.workId, applicationProperties.dataCenterId)
     }
 
+    @Bean
+    open fun protectNewFishMap() : MutableMap<Long, Long> {
+        return mutableMapOf()
+    }
+
 }

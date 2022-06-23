@@ -1,7 +1,6 @@
 package com.rw.random.infra.handler
 
 import cn.hutool.core.lang.Snowflake
-import cn.hutool.core.lang.Tuple
 import cn.hutool.core.util.RandomUtil
 import com.rw.random.common.constants.BeingStatus
 import com.rw.random.domain.entity.*
@@ -23,6 +22,7 @@ import reactor.core.publisher.Mono
 import reactor.core.publisher.Sinks
 import reactor.core.scheduler.Schedulers
 import reactor.util.concurrent.Queues
+import reactor.util.function.Tuple2
 import reactor.util.function.Tuples
 import kotlin.streams.toList
 
@@ -33,7 +33,8 @@ open class WorldMessageDispatchHandler(
     private val userFishService: UserFishService,
     private val pubsubMessageHandler: PubsubMessageHandler,
     private val applicationProperties: ApplicationProperties,
-    private val zone: RWZone
+    private val zone: RWZone,
+    private val protectNewFishMap: MutableMap<Long, Long>
 ) : SmartLifecycle, ApplicationEventPublisherAware {
 
     // 此处的队列大小与池中鱼的数量密切相关需要保证1:3的比例
@@ -55,47 +56,73 @@ open class WorldMessageDispatchHandler(
         running = true
         worldChannel.asFlux()
             .publishOn(Schedulers.boundedElastic())
-            .doOnNext { event ->
-                if (event is ObjectDestroyEvent) {
-                    Mono.just(1)
-                        .flatMap {
-                            if (event.source is Fish && event.source.hasMaster) {
-                                userFishService.changeFishStatusToDead(event.source)
-                            } else {
-                                Mono.empty()
-                            }
-                        }
-                        .subscribe { destroyObj(event) }
-                }
-            }
+            .doOnNext { doIfDestroyEvent(it) }
             .doOnNext { event -> Mono.just(1).subscribe { pushMessageToClient(event) } }
-            .filter { it !is InternalEvent && it !is WorldMessageEvent }
-            .onErrorContinue { err, it ->
-                log.error("dispatch error!", err, it)
-            }
-            .filter { it.target == null || it.target !is Being || it.target.isAlive() }
-            .flatMap { event ->
-                if (event is TimeEvent) {
-                    subscriptionRegistry.findAllObjByTopic(event.topic)
-                        .map { Tuples.of(it, event) }
-                } else {
-                    if (event.source != null && event.target != null) {
-                        Flux.just(Tuples.of(event.target.id, event), Tuples.of(event.source.id, event))
-                    } else if (event.source != null) {
-                        Flux.just(Tuples.of(event.source.id, event))
-                    } else if (event.target != null) {
-                        Flux.just(Tuples.of(event.target.id, event))
-                    } else {
-                        Flux.empty()
-                    }
-                }
-            }
+            .filter { isFishMessage(it) }
+            .filter { isReceiverReachable(it) }
+            .filter { filterIfAtkEvent(it) }
+            .flatMap { dispatch(it) }
             .map { Tuples.of(subscriptionRegistry.findConsumerByObjId(it.t1), it.t2) }
             .filter { it.t1.isPresent }
             .subscribeOn(Schedulers.boundedElastic())
-            .subscribe {
-                it.t1.get().accept(it.t2)
+            .onErrorContinue { err, it ->
+                log.error("dispatch error!", err, it)
             }
+            .subscribe { it.t1.get().accept(it.t2) }
+    }
+
+    private fun filterIfAtkEvent(event: RWEvent): Boolean {
+        return if (event is ATKEvent) {
+            val protectTime = protectNewFishMap[event.target!!.id]
+            if (protectTime == null) {
+                true
+            } else if (protectTime <= System.currentTimeMillis()) {
+                protectNewFishMap.remove(event.target.id)
+                true
+            } else {
+                false
+            }
+        } else true
+    }
+
+
+    private fun doIfDestroyEvent(event: RWEvent) {
+        if (event is ObjectDestroyEvent) {
+            Mono.just(1)
+                .flatMap {
+                    if (event.source is Fish && event.source.hasMaster) {
+                        userFishService.changeFishStatusToDead(event.source)
+                    } else {
+                        Mono.empty()
+                    }
+                }
+                .subscribe { destroyObj(event) }
+        }
+    }
+
+    private fun isFishMessage(event: RWEvent): Boolean {
+        return event !is InternalEvent && event !is WorldMessageEvent
+    }
+
+    private fun isReceiverReachable(event: RWEvent): Boolean {
+        return event.target == null || event.target !is Being || event.target.isAlive()
+    }
+
+    private fun dispatch(event: RWEvent): Flux<Tuple2<Long, out RWEvent>> {
+        return if (event is TimeEvent) {
+            subscriptionRegistry.findAllObjByTopic(event.topic)
+                .map { Tuples.of(it, event) }
+        } else {
+            if (event.source != null && event.target != null) {
+                Flux.just(Tuples.of(event.target.id, event), Tuples.of(event.source.id, event))
+            } else if (event.source != null) {
+                Flux.just(Tuples.of(event.source.id, event))
+            } else if (event.target != null) {
+                Flux.just(Tuples.of(event.target.id, event))
+            } else {
+                Flux.empty()
+            }
+        }
     }
 
     private fun pushMessageToClient(event: RWEvent) {

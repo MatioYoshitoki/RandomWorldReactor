@@ -2,9 +2,6 @@ package com.rw.random.infra.disaster
 
 import cn.hutool.core.util.RandomUtil
 import com.rw.random.domain.entity.ATKEvent
-import com.rw.random.domain.entity.BeAtkEvent
-import com.rw.random.domain.entity.CrazyDisasterEvent
-import com.rw.random.domain.entity.CrazyPersonality
 import com.rw.random.domain.entity.obj.ChaosGod
 import com.rw.random.domain.entity.obj.Fish
 import com.rw.random.infra.handler.WorldMessageDispatchHandler

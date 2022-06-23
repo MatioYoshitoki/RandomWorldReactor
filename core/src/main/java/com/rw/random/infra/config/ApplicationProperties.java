@@ -11,10 +11,19 @@ public class ApplicationProperties {
     private Integer taskChannelSize = 1024;
     private Long workId = 1L;
     private Long initFishCount = 10L;
+    private Long newFishProtectTime = 5 * 60 * 1000L;
 
     private Long loadTestFishCount = 1000L;
 
     private Long dataCenterId = 1L;
+
+    public Long getNewFishProtectTime() {
+        return newFishProtectTime;
+    }
+
+    public void setNewFishProtectTime(Long newFishProtectTime) {
+        this.newFishProtectTime = newFishProtectTime;
+    }
 
     private Map<String, ObjectInitProperties> objects = new HashMap<>();
 

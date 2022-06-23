@@ -5,6 +5,7 @@ import cn.hutool.core.util.RandomUtil
 import com.rw.random.domain.entity.RWPersonality
 import com.rw.random.domain.entity.RWZone
 import com.rw.random.domain.entity.obj.Fish
+import com.rw.random.infra.config.ApplicationProperties
 import com.rw.random.infra.config.TaskProperties
 import com.rw.random.infra.handler.TaskHandler
 import com.rw.random.infra.handler.WorldMessageDispatchHandler
@@ -21,11 +22,13 @@ interface EnterObjectUseCase {
 
 @Component
 open class EnterObjectUseCaseImpl(
+    private val applicationProperties: ApplicationProperties,
     private val worldMessageDispatchHandler: WorldMessageDispatchHandler,
     private val taskHandler: TaskHandler,
     private val taskProperties: TaskProperties,
     private val zone: RWZone,
     private val snowflake: Snowflake,
+    private val protectNewFishMap: MutableMap<Long, Long>
 ) : EnterObjectUseCase {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -36,6 +39,7 @@ open class EnterObjectUseCaseImpl(
             .map { randomFish(it, masterId) }
             .flatMap {
                 if (zone.enterZone(it)) {
+                    protectNewFishMap[it.id] = System.currentTimeMillis() + applicationProperties.newFishProtectTime
                     Mono.just(it.id)
                 } else {
                     Mono.empty()
