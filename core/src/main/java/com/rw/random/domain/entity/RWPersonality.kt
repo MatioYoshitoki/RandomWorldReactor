@@ -14,7 +14,7 @@ open class RWPersonality(
     val originRandomRate: Int = RandomUtil.randomInt(randomRange)
 ) {
 
-    private var eventBehavior: Map<KClass<out RWEvent>, SortedMap<Int, KClass<out RWTask>>> = mapOf()
+    protected var eventBehavior: Map<KClass<out RWEvent>, SortedMap<Int, KClass<out RWTask>>> = mapOf()
     private val log = LoggerFactory.getLogger(javaClass)
 
     init {
@@ -208,7 +208,6 @@ open class RWPersonality(
                 } else {
                     val target = RandomUtil.randomEleList(obj.findAllHumanSameZone().filter { it != obj }.toList(), 1)
                     if (target.size == 1) {
-                        log.info("random atk target: ${target.first().name}")
                         ATKTask(obj, target.first())
                     } else {
                         null
@@ -236,22 +235,6 @@ open class RWPersonality(
 
     companion object {
         private const val randomRange = 1500
-//        private val base = mapOf(
-//            ATKEvent::class to sortedMapOf(
-//                5500 to ATKTask::class,
-//                6000 to StayTask::class,
-//                10000 to EarnTask::class,
-//            ), EarnEvent::class to sortedMapOf(
-//                800 to ATKTask::class,
-//                2500 to StayTask::class,
-//                10000 to EarnTask::class,
-//            ), TimeEvent::class to sortedMapOf(
-//                500 to ATKTask::class,
-//                1500 to StayTask::class,
-//                10000 to EarnTask::class,
-//            )
-//        )
-
         fun random(personalityType: Int): RWPersonality {
             //1 AUED 1+2+
             //2 AUSD 1+
@@ -259,6 +242,9 @@ open class RWPersonality(
             //4 EUSD 2-
             //5 SUAD 1-
             //6 SUED 2+
+            if (personalityType == 999999) {
+                return CrazyPersonality()
+            }
             val tmp = if (personalityType > 196) {
                 196
             } else {

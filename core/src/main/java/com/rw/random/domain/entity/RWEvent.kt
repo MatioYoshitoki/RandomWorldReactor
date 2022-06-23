@@ -112,12 +112,11 @@ open class TimeEvent(
 
 open class ATKEvent(
     eventId: Long,
-    eventType: String,
     val atk: Int,
     topic: String,
     source: RWObject,
     target: RWObject,
-) : RWEvent(eventId, eventType, topic, source, target)
+) : RWEvent(eventId, "ATK", topic, source, target)
 
 open class StayEvent(
     eventId: Long,
@@ -153,14 +152,13 @@ open class InternalEvent(
 
 open class BeAtkEvent(
     eventId: Long,
-    eventType: String,
     topic: String,
     source: RWObject,
     target: RWObject,
     success: Boolean,
     val ct: Boolean,
     val damage: Int,
-) : InternalEvent(eventId, eventType, topic, source, target) {
+) : InternalEvent(eventId, "BeAtk", topic, source, target) {
     init {
         msg = if (success) {
             "${source.name} 受到【${target.name}】攻击,${if (ct) "产生暴击，" else ""} 生命值减少${damage}。"

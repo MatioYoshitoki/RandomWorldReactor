@@ -106,7 +106,6 @@ open class ATKTask(
         source.sendMsg(
             ATKEvent(
                 System.currentTimeMillis(),
-                "ATK",
                 (source as Being).atk,
                 source.topic,
                 source,

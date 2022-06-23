@@ -91,9 +91,6 @@ open class Being(
             it.value + (taskProperties.countDown[it.key.simpleName] ?: 0) >= currentTime
         }.keys
         val task = nextTask(event, excludeTask)
-        if (task is ATKTask) {
-            log.info("because of ${event.eventType} $name to ${task.target!!.name} ATK time: ${System.currentTimeMillis()}")
-        }
         if (task != null) {
             taskCountDownMap[task::class] = System.currentTimeMillis()
             pushTask(task)

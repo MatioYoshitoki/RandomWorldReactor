@@ -133,7 +133,7 @@ open class Fish(
             log.info("${this.name} 受到【${event.source!!.name}】攻击, 但未命中！")
             sendMsg(
                 BeAtkEvent(
-                    System.currentTimeMillis(), "BeAtk", this.topic, this, event.source,
+                    System.currentTimeMillis(), this.topic, this, event.source,
                     success = false,
                     ct = false,
                     damage = 0
@@ -144,7 +144,7 @@ open class Fish(
             this.heal -= damage
             sendMsg(
                 BeAtkEvent(
-                    System.currentTimeMillis(), "BeAtk", this.topic, this, event.source!!,
+                    System.currentTimeMillis(), this.topic, this, event.source!!,
                     success = true,
                     ct = false,
                     damage = damage

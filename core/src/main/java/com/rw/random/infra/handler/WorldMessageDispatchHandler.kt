@@ -2,9 +2,11 @@ package com.rw.random.infra.handler
 
 import cn.hutool.core.lang.Snowflake
 import cn.hutool.core.lang.Tuple
+import cn.hutool.core.util.RandomUtil
 import com.rw.random.common.constants.BeingStatus
 import com.rw.random.domain.entity.*
 import com.rw.random.domain.entity.obj.Being
+import com.rw.random.domain.entity.obj.ChaosGod
 import com.rw.random.domain.entity.obj.Fish
 import com.rw.random.domain.service.UserFishService
 import com.rw.random.infra.config.ApplicationProperties
@@ -22,6 +24,7 @@ import reactor.core.publisher.Sinks
 import reactor.core.scheduler.Schedulers
 import reactor.util.concurrent.Queues
 import reactor.util.function.Tuples
+import kotlin.streams.toList
 
 @Component
 open class WorldMessageDispatchHandler(
@@ -66,7 +69,7 @@ open class WorldMessageDispatchHandler(
                 }
             }
             .doOnNext { event -> Mono.just(1).subscribe { pushMessageToClient(event) } }
-            .filter { it !is InternalEvent }
+            .filter { it !is InternalEvent && it !is WorldMessageEvent }
             .onErrorContinue { err, it ->
                 log.error("dispatch error!", err, it)
             }
@@ -100,6 +103,9 @@ open class WorldMessageDispatchHandler(
         if (applicationProperties.messageTypeNeedToSend.contains(event.eventType)) {
             pubsubMessageHandler.sendToUser(event)
         }
+        if (event is WorldMessageEvent) {
+            pubsubMessageHandler.sendToWorld(event)
+        }
     }
 
     /**
@@ -108,8 +114,22 @@ open class WorldMessageDispatchHandler(
     private fun destroyObj(event: ObjectDestroyEvent) {
         publishObjectStatusChangeEvent(event.source!!.id, BeingStatus.DEAD, event.source.hasMaster)
         zone.clearObj(event.source)
-        if (event.target != null && (event.source is Fish)) {
+        if (event.target != null && event.target is Fish && event.source is Fish) {
             event.target.handler.accept(
+                EarnEvent(
+                    snowflake.nextId(),
+                    "Earn",
+                    event.source.weight,
+                    event.target.topic,
+                    event.target
+                )
+            )
+        }
+        if (event.target != null && event.target is ChaosGod && event.source is Fish) {
+            val target =
+                RandomUtil.randomEleList(event.source.findAllHumanSameZone().filter { it != event.source }.toList(), 1)
+                    .first()
+            target.handler.accept(
                 EarnEvent(
                     snowflake.nextId(),
                     "Earn",
