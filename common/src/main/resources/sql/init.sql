@@ -27,7 +27,7 @@ create table user_property
     update_time    datetime        default current_timestamp on update current_timestamp
 );
 
-create table fish_sell
+create table fish_sell_log
 (
     id          bigint primary key,
     seller_id   bigint      not null,
@@ -36,6 +36,14 @@ create table fish_sell
     fish_name   varchar(16) not null,
     fish_detail json        not null,
     price       bigint      not null,
+    create_time datetime default current_timestamp,
+    update_time datetime default current_timestamp on update current_timestamp
+);
+
+create table fish_sold_out_log
+(
+    id          bigint primary key,
+    order_id    bigint unique key,
     create_time datetime default current_timestamp,
     update_time datetime default current_timestamp on update current_timestamp
 );

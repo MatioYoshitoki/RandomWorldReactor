@@ -58,9 +58,7 @@ open class WorldMessageDispatchHandler(
             .publishOn(Schedulers.boundedElastic())
             .doOnNext { doIfDestroyEvent(it) }
             .doOnNext { event -> Mono.just(1).subscribe { pushMessageToClient(event) } }
-            .filter { isFishMessage(it) }
-            .filter { isReceiverReachable(it) }
-            .filter { filterIfAtkEvent(it) }
+            .filter { isFishMessage(it) && isReceiverReachable(it) && filterIfAtkEvent(it)}
             .flatMap { dispatch(it) }
             .map { Tuples.of(subscriptionRegistry.findConsumerByObjId(it.t1), it.t2) }
             .filter { it.t1.isPresent }
@@ -79,9 +77,7 @@ open class WorldMessageDispatchHandler(
             } else if (protectTime <= System.currentTimeMillis()) {
                 protectNewFishMap.remove(event.target.id)
                 true
-            } else {
-                false
-            }
+            } else false
         } else true
     }
 
