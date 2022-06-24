@@ -1,13 +1,16 @@
 package com.rw.websocket.domain.entity
 
+import cn.hutool.core.date.DateUtil
+import com.rw.websocket.domain.dto.request.FishDetails
 import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
+import java.sql.Date
 
 @Table("fish_sell_log")
 open class FishSellLog(
     @Id
-    val id: Long,
+    var id: Long? = null,
     @Column("seller_id")
     val sellerId: Long,
     @Column("seller_name")
@@ -20,8 +23,35 @@ open class FishSellLog(
     val fishDetail: String,
     @Column("price")
     val price: Long,
+    @Column("status")
+    val status: Int,
     @Column("create_time")
-    val createTime: Long,
+    val createTime: Date,
     @Column("update_time")
-    val updateTime: Long
-)
+    val updateTime: Date
+) {
+    companion object {
+        fun of(
+            sellerId: Long,
+            sellerName: String,
+            fishId: Long,
+            fishName: String,
+            fishDetail: FishDetails,
+            price: Long,
+        ): FishSellLog {
+            val nowDt = DateUtil.date().toSqlDate()
+            return FishSellLog(
+                null,
+                sellerId,
+                sellerName,
+                fishId,
+                fishName,
+                fishDetail.toString(),
+                price,
+                0,
+                nowDt,
+                nowDt
+            )
+        }
+    }
+}

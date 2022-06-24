@@ -12,6 +12,8 @@ interface FishRepository {
 
     fun updateMasterId(fishId: Long, masterId: Long): Mono<Void>
 
+    fun updateFishStatus(fishId: Long, status: BeingStatus): Mono<Void>
+
     fun deleteOne(fishId: Long): Mono<Boolean>
 }
 
@@ -59,6 +61,13 @@ open class FishRepositoryImpl(
             .putIfAbsent(getKey(fishId), "masterId", masterId.toString())
             .then()
     }
+
+    override fun updateFishStatus(fishId: Long, status: BeingStatus): Mono<Void> {
+        return redisTemplate.opsForHash<String, String>()
+            .put(getKey(fishId), "status", status.name)
+            .then()
+    }
+
 
     override fun deleteOne(fishId: Long): Mono<Boolean> {
         return redisTemplate.opsForHash<String, String>()

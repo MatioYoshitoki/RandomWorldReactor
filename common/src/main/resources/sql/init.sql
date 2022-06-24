@@ -51,6 +51,7 @@ create table fish_sold_out_log
 create table fish_deal_history
 (
     id          bigint primary key,
+    order_id    bigint unique key,
     seller_id   bigint      not null,
     seller_name varchar(16) not null,
     buyer_id    bigint      not null,

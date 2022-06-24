@@ -40,6 +40,8 @@ interface UserService {
 
     fun bindUserFish(userId: Long, fishId: Long): Mono<UserFish>
 
+    fun unbindUserFish(userId: Long, fishId: Long): Mono<Boolean>
+
     fun getUserFish(fishId: Long): Mono<UserFish>
 
     fun logout(accessToken: String): Mono<Void>
@@ -122,14 +124,6 @@ open class UserServiceImpl(
             .flatMap {
                 userPropertyRepository.addOne(it.id)
             }
-//            .flatMap {
-//                updateUserInfoCache(it.id!!)
-//            }
-//            .flatMap {
-//                val accessToken = SecureUtil.md5(snowflake.nextId().toString())
-//                val userId = it.id!!
-//                updateAccessToken(userId, accessToken)
-//            }
             .switchIfEmpty { Mono.error(RegisterException("用户名被占用")) }
             .then()
     }
@@ -141,6 +135,11 @@ open class UserServiceImpl(
     override fun bindUserFish(userId: Long, fishId: Long): Mono<UserFish> {
         return userFishRepository.addOne(userId, fishId)
 //            .delayUntil { fishRepository.updateMasterId(fishId, userId) }
+    }
+
+    override fun unbindUserFish(userId: Long, fishId: Long): Mono<Boolean> {
+        return userFishRepository.deleteOne(fishId)
+            .map { it > 0 }
     }
 
     override fun getUserFish(fishId: Long): Mono<UserFish> {

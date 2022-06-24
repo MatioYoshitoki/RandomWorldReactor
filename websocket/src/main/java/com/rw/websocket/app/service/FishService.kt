@@ -1,11 +1,14 @@
 package com.rw.websocket.app.service
 
+import com.rw.random.common.constants.BeingStatus
 import com.rw.websocket.domain.dto.request.FishDetails
-import com.rw.websocket.domain.repository.FishRepository
-import com.rw.websocket.domain.repository.UserFishRepository
-import com.rw.websocket.domain.repository.UserRepository
+import com.rw.websocket.domain.entity.FishDealHistory
+import com.rw.websocket.domain.entity.FishSellLog
+import com.rw.websocket.domain.repository.*
 import org.springframework.stereotype.Service
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import reactor.core.publisher.switchIfEmpty
 
 interface FishService {
 
@@ -15,6 +18,18 @@ interface FishService {
 
     fun checkFishOwner(fishId: Long, userName: String): Mono<Boolean>
 
+    fun getSellingFishByOrderId(orderId: Long): Mono<FishSellLog>
+
+    fun getSellingFish(orderBy: String, page: Int, pageSize: Int): Flux<FishSellLog>
+
+    fun sellFish(fishDetails: FishDetails, userName: String, userId: Long, price: Long): Mono<Void>
+
+    fun changeFishStatus(fishId: Long, status: BeingStatus): Mono<Void>
+
+    fun soldOutFish(userName: String, orderId: Long, fishId: Long): Mono<Void>
+
+    fun finishFishOrder(userId: Long, userName: String, fishSellLog: FishSellLog): Mono<Boolean>
+
 }
 
 @Service
@@ -22,6 +37,9 @@ open class FishServiceImpl(
     private val userFishRepository: UserFishRepository,
     private val fishRepository: FishRepository,
     private val userRepository: UserRepository,
+    private val fishSellLogRepository: FishSellLogRepository,
+    private val fishSoldOutLogRepository: FishSoldOutLogRepository,
+    private val fishDealHistoryRepository: FishDealHistoryRepository
 ) : FishService {
     override fun getFishDetail(fishId: Long): Mono<FishDetails> {
         return fishRepository.findOne(fishId)
@@ -44,14 +62,72 @@ open class FishServiceImpl(
                     }
             }
             .defaultIfEmpty(false)
-//        userInfoRepository.findOneUserProperty(userId)
-//            .flatMap { user ->
-//                userFishRepository.findFishOwner(fishId)
-//                    .map {
-//                        it == user.userId
-//                    }
-//            }
-//            .defaultIfEmpty(false)
+    }
+
+    override fun getSellingFishByOrderId(orderId: Long): Mono<FishSellLog> {
+        return fishSellLogRepository.findOne(orderId)
+    }
+
+    override fun getSellingFish(orderBy: String, page: Int, pageSize: Int): Flux<FishSellLog> {
+        return fishSellLogRepository.findAllByPage(orderBy, page, pageSize)
+    }
+
+    override fun sellFish(fishDetails: FishDetails, userName: String, userId: Long, price: Long): Mono<Void> {
+        return fishSellLogRepository.saveOne(
+            FishSellLog.of(
+                userId,
+                userName,
+                fishDetails.id,
+                fishDetails.name,
+                fishDetails,
+                price
+            )
+        )
+            .flatMap { fishSellLog ->
+                changeFishStatus(fishSellLog.fishId, BeingStatus.SELLING)
+            }
+    }
+
+    override fun changeFishStatus(fishId: Long, status: BeingStatus): Mono<Void> {
+        return userFishRepository.updateFishStatus(fishId, status)
+            .flatMap {
+                if (it > 0) {
+                    fishRepository.updateFishStatus(fishId, status)
+                } else {
+                    Mono.empty()
+                }
+            }
+    }
+
+    override fun soldOutFish(userName: String, orderId: Long, fishId: Long): Mono<Void> {
+        return fishSellLogRepository.updateStatus(orderId, 1)
+            .filter { it }
+            .flatMap {
+                userFishRepository.updateFishStatus(fishId, BeingStatus.SLEEP)
+                    .flatMap {
+                        if (it > 0) {
+                            fishRepository.updateFishStatus(fishId, BeingStatus.SLEEP)
+                        } else {
+                            Mono.empty()
+                        }
+                    }
+            }
+    }
+
+    override fun finishFishOrder(userId: Long, userName: String, fishSellLog: FishSellLog): Mono<Boolean> {
+        return fishSellLogRepository.updateStatus(fishSellLog.id!!, 2)
+            .flatMap {
+                if (it) {
+                    fishDealHistoryRepository.saveOne(FishDealHistory.of(fishSellLog, userId, userName))
+                        .map { true }
+                        .switchIfEmpty {
+                            fishSellLogRepository.updateStatus(fishSellLog.id!!, 3)
+                                .map { false }
+                        }
+                } else {
+                    Mono.just(false)
+                }
+            }
     }
 
 }

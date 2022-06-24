@@ -1,5 +1,5 @@
 package com.rw.random.common.constants
 
 enum class BeingStatus {
-    ALIVE, DEAD, SLEEP
+    ALIVE, DEAD, SLEEP, SELLING
 }
