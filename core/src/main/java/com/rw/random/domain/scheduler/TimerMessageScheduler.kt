@@ -1,4 +1,4 @@
-package com.rw.random.infra.scheduler
+package com.rw.random.domain.scheduler
 
 import com.rw.random.domain.entity.RWZone
 import com.rw.random.domain.entity.TimeEvent

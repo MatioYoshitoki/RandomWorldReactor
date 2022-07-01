@@ -10,6 +10,7 @@ abstract class RWEvent(
     val target: RWObject?,
 ) {
     var msg: String = ""
+
     override fun toString(): String {
         return "source=${source?.name}, target=${target?.name}, msg=$msg, type=${this.javaClass}"
     }
@@ -96,6 +97,10 @@ open class ObjectDestroyEvent(
     }
 
     override fun toString(): String {
+        val sourceStr = """
+            {""}
+        """.trimIndent()
+
         return """
         {"source_name": "${source?.name}", "source_id": ${source?.id}, "target_name": "${target?.name}", "target_id": ${target?.id}, "event_type": "$eventType"}
         """.trimIndent()

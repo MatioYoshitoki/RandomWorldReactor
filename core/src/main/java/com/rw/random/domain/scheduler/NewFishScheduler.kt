@@ -1,4 +1,4 @@
-package com.rw.random.infra.scheduler
+package com.rw.random.domain.scheduler
 
 import cn.hutool.core.lang.Snowflake
 import cn.hutool.core.util.RandomUtil

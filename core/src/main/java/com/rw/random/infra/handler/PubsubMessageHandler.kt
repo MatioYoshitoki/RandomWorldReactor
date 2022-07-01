@@ -1,5 +1,6 @@
 package com.rw.random.infra.handler
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.rw.random.domain.entity.ObjectDestroyEvent
 import com.rw.random.domain.entity.RWEvent
 import com.rw.random.domain.repository.RedisPubsubRepository
@@ -13,6 +14,7 @@ import reactor.util.concurrent.Queues
 @Component
 open class PubsubMessageHandler(
     private val redisPubsubRepository: RedisPubsubRepository,
+    private val objectMapper: ObjectMapper,
 ) : SmartLifecycle {
 
     private var isRunning = false
@@ -53,23 +55,20 @@ open class PubsubMessageHandler(
         }
     }
 
-    fun sendToUser(event: RWEvent) {
-        if (event is ObjectDestroyEvent) {
-            log.info("try to send DESTROY event: target=${event.target?.masterId} ${event.target?.hasMaster}, source=${event.source?.masterId} ${event.source?.hasMaster}")
-        }
-        if (event.source?.hasMaster != null && event.source.hasMaster && event.source.masterId != null) {
-            val message = """
-            {"dest": "/topic/user/${event.source.masterId}", "__PAYLOAD": $event}
+    fun sendToUser(userId: Long, payload: Any) {
+        log.info("send to channel: $payload")
+        val message = """
+            {"dest": "/topic/user/${userId}", "__PAYLOAD": $payload}
         """.trimIndent()
-            log.info("send to channel: $message")
-            sendMessage(message)
+        sendMessage(message)
+    }
+
+    fun sendToUser(event: RWEvent) {
+        if (event.source?.hasMaster != null && event.source.hasMaster && event.source.masterId != null) {
+            sendToUser(event.source.masterId!!, event.toString())
         }
         if ((event.target?.hasMaster != null && event.target.hasMaster && event.target.masterId != null)) {
-            val message = """
-            {"dest": "/topic/user/${event.target.masterId}", "__PAYLOAD": $event}
-        """.trimIndent()
-            log.info("send to channel: $message")
-            sendMessage(message)
+            sendToUser(event.target.masterId!!, event.toString())
         }
     }
 

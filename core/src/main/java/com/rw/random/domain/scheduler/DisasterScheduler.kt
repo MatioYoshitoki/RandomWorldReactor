@@ -1,4 +1,4 @@
-package com.rw.random.infra.scheduler
+package com.rw.random.domain.scheduler
 
 import com.rw.random.app.usecase.DisasterUseCase
 import org.slf4j.LoggerFactory

@@ -1,4 +1,4 @@
-package com.rw.random.infra.scheduler
+package com.rw.random.domain.scheduler
 
 import cn.hutool.json.JSONUtil
 import com.rw.random.domain.entity.RWZone

@@ -163,4 +163,29 @@ open class Fish(
         return 0
     }
 
+    override fun toString(): String {
+
+//        id: Long,
+//        name: String,
+//        hasMaster: Boolean = false,
+//        masterId: Long? = null,
+//        var weight: Long = 800, // 体重
+//        var maxHeal: Int = 10000 + (Math.random() * 5000).toInt(),
+//        heal: Int = maxHeal,
+//        var recoverSpeed: Int = 100,
+//        atk: Int = 300 + (Math.random() * 200).toInt(),
+//        var def: Int = 90 + (Math.random() * 180).toInt(),
+//        earnSpeed: Long = 30,
+//        val dodge: Int = 5, // max 100
+//        money: Long = (Math.random() * 200).toLong(),
+//        taskProperties: TaskProperties,
+//        sound: Sinks.Many<RWEvent>?,
+//        taskChannel: Sinks.Many<RWTask>?,
+//        status: BeingStatus = BeingStatus.ALIVE,
+//        val personality: RWPersonality,
+        return """
+            {"id": $id, "name": "$name", "has_master": $hasMaster, "master_id": $masterId, "weight": $weight, "max_heal": $maxHeal, "heal": $heal, "recover_speed": $recoverSpeed, "atk": $atk, "def": $def, "earn_speed": $earnSpeed, "dodge": $dodge, "money": $money, "status": "${status.name}", "personality": ${personality.personality}}
+        """.trimIndent()
+    }
+
 }
