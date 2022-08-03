@@ -26,7 +26,10 @@ open class RedisPubsubRepositoryImpl(
         return redisTemplate.convertAndSend(RedisKeyConstants.REDIS_CHANNEL_KEY, message)
             .timeout(Duration.ofMillis(100))
             .retry(1)
-            .onErrorResume { Mono.empty() }
+            .onErrorResume {
+                log.error("pub sub message error!", it)
+                Mono.empty()
+            }
             .then()
     }
 

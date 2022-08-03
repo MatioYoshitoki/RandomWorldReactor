@@ -10,13 +10,13 @@ spring:
   security:
     strategy: MODE_GLOBAL
   redis:
-    host: 127.0.0.1
-    password:
+    host: 47.110.249.236
+    password: Sunlight
     database: 0
   r2dbc:
-    url: r2dbc:mysql://localhost:3307/random_world?useSSL=false&useUnicode=true&characterEncoding=utf-8&sslMode=disabled
+    url: r2dbc:mysql://47.110.249.236:3306/random_world?useSSL=false&useUnicode=true&characterEncoding=utf-8&sslMode=disabled
     username: root
-    password: Chiwen2233
+    password: Sunlight
     timeout: 10
 
 random-world:

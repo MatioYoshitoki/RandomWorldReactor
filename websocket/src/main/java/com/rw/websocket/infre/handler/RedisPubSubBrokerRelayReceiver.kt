@@ -111,6 +111,10 @@ open class RedisPubSubBrokerRelayReceiver(
                         val sendMsg = it.textMessage(objectMapper.writeValueAsString(msg.payload!!))
 //                        log.info("send msg: {}", sendMsg.payloadAsText)
                         it.send(Mono.just(sendMsg))
+                            .onErrorResume { err ->
+                                log.error("SEND ERROR", err)
+                                Mono.empty()
+                            }
                     }
             }
             .onErrorResume {
