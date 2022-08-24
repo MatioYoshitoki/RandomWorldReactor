@@ -1,6 +1,5 @@
 package com.rw.websocket.infre.handler
 
-
 import com.rw.websocket.infre.config.ApplicationProperties
 import com.rw.websocket.infre.messaging.MapMessage
 import com.rw.websocket.infre.utils.SimpleMessageUtils
@@ -40,7 +39,6 @@ open class OutgoingHandler(
         msgFlux: Flux<Message<MapMessage>>,
         session: WebSocketSession
     ): Flux<WebSocketMessage> {
-
         return msgFlux
             .doOnNext {
                 log.debug("[sessionId={}] Send compress message to client: {}", session.id, it)
@@ -48,8 +46,14 @@ open class OutgoingHandler(
             .flatMap {
                 Mono.just(it.headers[SimpleMessageUtils.PAYLOAD_BYTES] as ByteArray)
             }
-            .map {
-                session.binaryMessage { df: DataBufferFactory -> df.wrap(it!!) }
+            .flatMap {
+                if (session.isOpen) {
+                    Mono.fromRunnable {
+                        session.binaryMessage { df: DataBufferFactory -> df.wrap(it!!) }
+                    }
+                } else {
+                    Mono.empty()
+                }
             }
     }
 
