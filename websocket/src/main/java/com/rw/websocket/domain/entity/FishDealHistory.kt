@@ -37,15 +37,15 @@ open class FishDealHistory(
         fun of(fishSellLog: FishSellLog, buyerId: Long, buyerName: String): FishDealHistory {
             return FishDealHistory(
                 null,
-                fishSellLog.id!!,
-                fishSellLog.sellerId,
+                fishSellLog.id!!.toLong(),
+                fishSellLog.sellerId.toLong(),
                 fishSellLog.sellerName,
                 buyerId,
                 buyerName,
-                fishSellLog.fishId,
+                fishSellLog.fishId.toLong(),
                 fishSellLog.fishName,
                 fishSellLog.fishDetail,
-                fishSellLog.price,
+                fishSellLog.price.toLong(),
                 DateUtil.date().toSqlDate(),
                 DateUtil.date().toSqlDate(),
             )

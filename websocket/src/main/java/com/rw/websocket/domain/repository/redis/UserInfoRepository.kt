@@ -30,10 +30,10 @@ open class UserInfoRepositoryImpl(
             .filter { it.containsKey(UserWithProperty.USER_ID_FIELD) }
             .map {
                 UserWithProperty(
-                    it[UserWithProperty.USER_ID_FIELD]!!.toLong(),
+                    it[UserWithProperty.USER_ID_FIELD]!!.toString(),
                     it[UserWithProperty.USER_NAME_FIELD] ?: "",
-                    it[UserWithProperty.EXP_FIELD]?.toLong() ?: 0L,
-                    it[UserWithProperty.MONEY_FIELD]?.toLong() ?: 0L,
+                    it[UserWithProperty.EXP_FIELD]?.toInt() ?: 0,
+                    it[UserWithProperty.MONEY_FIELD]?.toInt() ?: 0,
                     it[UserWithProperty.FISH_MAX_COUNT_FIELD]?.toLong() ?: 1L
                 )
             }

@@ -88,10 +88,10 @@ open class UserServiceImpl(
             }
             .map {
                 UserWithProperty(
-                    it[UserWithProperty.USER_ID_FIELD]!!.toLong(),
+                    it[UserWithProperty.USER_ID_FIELD]!!.toString(),
                     it[UserWithProperty.USER_NAME_FIELD]!!,
-                    it[UserWithProperty.EXP_FIELD]?.toLong() ?: 0,
-                    it[UserWithProperty.MONEY_FIELD]?.toLong() ?: 0,
+                    it[UserWithProperty.EXP_FIELD]?.toInt() ?: 0,
+                    it[UserWithProperty.MONEY_FIELD]?.toInt() ?: 0,
                     it[UserWithProperty.FISH_MAX_COUNT_FIELD]?.toLong() ?: 0
                 )
             }
@@ -124,7 +124,7 @@ open class UserServiceImpl(
             .flatMap {
                 userPropertyRepository.addOne(it.id)
             }
-            .switchIfEmpty { Mono.error(RegisterException("用户名被占用")) }
+            .switchIfEmpty(Mono.error(RegisterException("用户名被占用")))
             .then()
     }
 
@@ -150,7 +150,7 @@ open class UserServiceImpl(
         return accessTokenUserRepository.findOneUserProperty(accessToken)
             .flatMap {
                 accessTokenUserRepository.removeOne(accessToken)
-                    .then(userAccessTokenRepository.removeOne(it.userId))
+                    .then(userAccessTokenRepository.removeOne(it.userId.toLong()))
             }
     }
 

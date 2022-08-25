@@ -1,9 +1,12 @@
 package com.rw.websocket.domain.dto.request
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
+import com.fasterxml.jackson.databind.annotation.JsonNaming
 import com.rw.random.common.constants.BeingStatus
 
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 class FishDetails(
-    var id: Long,
+    var id: String,
     var name: String,
     var hasMaster: Boolean,
     var weight: Int,

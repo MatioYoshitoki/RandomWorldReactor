@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono
 import java.net.URI
 
 interface FishCreateUseCase {
-    fun runCase(userName: String): Mono<Long>
+    fun runCase(userName: String): Mono<String>
 }
 
 @Component
@@ -24,10 +24,10 @@ open class FishCreateUseCaseImpl(
 
     private val webClient = WebClient.create()
 
-    override fun runCase(userName: String): Mono<Long> {
+    override fun runCase(userName: String): Mono<String> {
         return userService.getUserWithPropertyByUserName(userName)
             .delayUntil { user ->
-                userService.getAllFish(user.userId)
+                userService.getAllFish(user.userId.toLong())
                     .count()
                     .flatMap {
                         if (user.fishMaxCount <= it) {
@@ -45,11 +45,11 @@ open class FishCreateUseCaseImpl(
                 }
             }
             .flatMap { user ->
-                expendMoney(user.userId, userName)
+                expendMoney(user.userId.toLong(), userName)
             }
     }
 
-    private fun expendMoney(userId: Long, userName: String): Mono<Long> {
+    private fun expendMoney(userId: Long, userName: String): Mono<String> {
         return moneyChangeService.expendMoney(userId, userName, applicationProperties.newFishPrice)
             .flatMap { enoughMoney ->
                 if (!enoughMoney) {
@@ -68,6 +68,7 @@ open class FishCreateUseCaseImpl(
                                     }
                             }
                         }
+                        .map { it.toString() }
                 }
             }
     }

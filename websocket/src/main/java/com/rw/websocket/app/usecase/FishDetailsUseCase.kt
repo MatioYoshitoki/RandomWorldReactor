@@ -20,9 +20,9 @@ open class FishDetailsUseCaseImpl(
     override fun runCase(userName: String, fishId: Long?): Mono<List<FishDetails>> {
         return userService.getUserWithPropertyByUserName(userName)
             .flatMap { user ->
-                userService.getAllFish(user.userId)
+                userService.getAllFish(user.userId.toLong())
                     .filter {
-                        it.fishId == fishId
+                        it.fishId == fishId || fishId == null
                     }
                     .flatMap {
                         fishService.getFishDetail(it.fishId)

@@ -25,7 +25,7 @@ open class FishController(
     @GetMapping("/list")
     fun fishDetail(
         @AuthenticationPrincipal principal: Mono<UserDetails>,
-        @RequestParam("fishId") fishId: Long?,
+        @RequestParam("fish_id") fishId: Long?,
     ): Mono<RWResult<List<FishDetails>>> {
         // 鱼列表
         return principal
@@ -44,7 +44,7 @@ open class FishController(
     fun fishPut(
         @AuthenticationPrincipal principal: Mono<UserDetails>,
         @RequestBody fishRequest: FishRequest
-    ): Mono<RWResult<Long>> {
+    ): Mono<RWResult<String>> {
         log.info("fishId=${fishRequest.fishId}")
         // 放鱼
         return principal
@@ -66,7 +66,7 @@ open class FishController(
     @PostMapping("/create")
     fun fishCreate(
         @AuthenticationPrincipal principal: Mono<UserDetails>,
-    ): Mono<RWResult<Long>> {
+    ): Mono<RWResult<String>> {
         return principal
             .flatMap {
                 fishCreateUseCase.runCase(it.username)
@@ -87,7 +87,7 @@ open class FishController(
     fun fishing(
         @AuthenticationPrincipal principal: Mono<UserDetails>,
         @RequestBody fishRequest: FishRequest
-    ): Mono<RWResult<Long>> {
+    ): Mono<RWResult<String>> {
         // 捞鱼
         return principal
             .flatMap {

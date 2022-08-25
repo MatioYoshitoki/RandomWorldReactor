@@ -22,11 +22,11 @@ open class SoldOutFishUseCaseImpl(
     override fun runCase(userName: String, orderId: Long): Mono<Void> {
         return fishService.getSellingFishByOrderId(orderId)
             .filter { it.status == 1 }
-            .filterWhen { fishService.checkFishOwner(it.fishId, userName) }
+            .filterWhen { fishService.checkFishOwner(it.fishId.toLong(), userName) }
             .flatMap { fishSellLog ->
                 userService.getUserByUserName(userName)
                     .flatMap {
-                        fishService.soldOutFish(userName, orderId, fishSellLog.fishId)
+                        fishService.soldOutFish(userName, orderId, fishSellLog.fishId.toLong())
                     }
             }
 

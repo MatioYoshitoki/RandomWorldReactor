@@ -75,16 +75,16 @@ open class FishServiceImpl(
     override fun sellFish(fishDetails: FishDetails, userName: String, userId: Long, price: Long): Mono<Void> {
         return fishSellLogRepository.saveOne(
             FishSellLog.of(
-                userId,
+                userId.toString(),
                 userName,
                 fishDetails.id,
                 fishDetails.name,
                 fishDetails,
-                price
+                price.toInt()
             )
         )
             .flatMap { fishSellLog ->
-                changeFishStatus(fishSellLog.fishId, BeingStatus.SELLING)
+                changeFishStatus(fishSellLog.fishId.toLong(), BeingStatus.SELLING)
             }
     }
 
@@ -115,15 +115,15 @@ open class FishServiceImpl(
     }
 
     override fun finishFishOrder(userId: Long, userName: String, fishSellLog: FishSellLog): Mono<Boolean> {
-        return fishSellLogRepository.updateStatus(fishSellLog.id!!, 2)
+        return fishSellLogRepository.updateStatus(fishSellLog.id!!.toLong(), 2)
             .flatMap {
                 if (it) {
                     fishDealHistoryRepository.saveOne(FishDealHistory.of(fishSellLog, userId, userName))
                         .map { true }
-                        .switchIfEmpty {
-                            fishSellLogRepository.updateStatus(fishSellLog.id!!, 3)
+                        .switchIfEmpty(
+                            fishSellLogRepository.updateStatus(fishSellLog.id!!.toLong(), 3)
                                 .map { false }
-                        }
+                        )
                 } else {
                     Mono.just(false)
                 }

@@ -1,6 +1,8 @@
 package com.rw.websocket.domain.entity
 
 import cn.hutool.core.date.DateUtil
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
+import com.fasterxml.jackson.databind.annotation.JsonNaming
 import com.rw.websocket.domain.dto.request.FishDetails
 import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Column
@@ -8,21 +10,22 @@ import org.springframework.data.relational.core.mapping.Table
 import java.sql.Date
 
 @Table("fish_sell_log")
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 open class FishSellLog(
     @Id
-    var id: Long? = null,
+    var id: String? = null,
     @Column("seller_id")
-    val sellerId: Long,
+    val sellerId: String,
     @Column("seller_name")
     val sellerName: String,
     @Column("fish_id")
-    val fishId: Long,
+    val fishId: String,
     @Column("fish_name")
     val fishName: String,
     @Column("fish_detail")
     val fishDetail: String,
     @Column("price")
-    val price: Long,
+    val price: Int,
     @Column("status")
     val status: Int,
     @Column("create_time")
@@ -32,12 +35,12 @@ open class FishSellLog(
 ) {
     companion object {
         fun of(
-            sellerId: Long,
+            sellerId: String,
             sellerName: String,
-            fishId: Long,
+            fishId: String,
             fishName: String,
             fishDetail: FishDetails,
-            price: Long,
+            price: Int,
         ): FishSellLog {
             val nowDt = DateUtil.date().toSqlDate()
             return FishSellLog(

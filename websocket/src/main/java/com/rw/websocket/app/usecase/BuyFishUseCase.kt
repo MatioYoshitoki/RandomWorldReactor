@@ -38,7 +38,7 @@ open class BuyFishUseCaseImpl(
                         userService.getUserWithPropertyByUserName(userName)
                             .flatMap { property ->
                                 if (property.money >= fishSellLog.price) {
-                                    userService.getAllFish(property.userId)
+                                    userService.getAllFish(property.userId.toLong())
                                         .count()
                                         .flatMap { fishCount ->
                                             if (property.fishMaxCount > fishCount) {
@@ -65,9 +65,9 @@ open class BuyFishUseCaseImpl(
 
     private fun buy(property: UserWithProperty, fishSellLog: FishSellLog): Mono<FishSellLog> {
         return moneyChangeService.expendMoney(
-            property.userId,
+            property.userId.toLong(),
             property.userName,
-            fishSellLog.price
+            fishSellLog.price.toLong()
         )
             .flatMap { success ->
                 if (success) {
@@ -75,7 +75,7 @@ open class BuyFishUseCaseImpl(
                         .filter { it }
                         .flatMap {
                             fishService.finishFishOrder(
-                                property.userId,
+                                property.userId.toLong(),
                                 property.userName,
                                 fishSellLog
                             )
@@ -86,26 +86,26 @@ open class BuyFishUseCaseImpl(
             }
             .filter { it }
             .flatMap {
-                fishService.changeFishStatus(fishSellLog.fishId, BeingStatus.SLEEP)
+                fishService.changeFishStatus(fishSellLog.fishId.toLong(), BeingStatus.SLEEP)
             }
             .map { fishSellLog }
     }
 
     private fun changeFishMaster(fishSellLog: FishSellLog, property: UserWithProperty): Mono<Boolean> {
         return userService.unbindUserFish(
-            fishSellLog.sellerId,
-            fishSellLog.fishId
+            fishSellLog.sellerId.toLong(),
+            fishSellLog.fishId.toLong()
         )
             .filter { it }
             .flatMap {
                 userService.bindUserFish(
-                    property.userId,
-                    fishSellLog.fishId
+                    property.userId.toLong(),
+                    fishSellLog.fishId.toLong()
                 )
             }
             .flatMap {
                 fishService.finishFishOrder(
-                    property.userId,
+                    property.userId.toLong(),
                     property.userName,
                     fishSellLog
                 )

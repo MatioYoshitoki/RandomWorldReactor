@@ -1,16 +1,19 @@
 package com.rw.websocket.domain.entity
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
+import com.fasterxml.jackson.databind.annotation.JsonNaming
 
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 class UserWithProperty(
     @JsonProperty(USER_ID_FIELD)
-    val userId: Long,
+    val userId: String,
     @JsonProperty(USER_NAME_FIELD)
     val userName: String,
     @JsonProperty(EXP_FIELD)
-    var exp: Long,
+    var exp: Int,
     @JsonProperty(MONEY_FIELD)
-    var money: Long,
+    var money: Int,
     @JsonProperty(FISH_MAX_COUNT_FIELD)
     var fishMaxCount: Long,
 ) {

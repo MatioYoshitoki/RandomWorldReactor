@@ -11,7 +11,7 @@ import java.net.URI
 
 interface PutFishUseCase {
 
-    fun runCase(userName: String, fishId: Long): Mono<Long>
+    fun runCase(userName: String, fishId: Long): Mono<String>
 
 }
 
@@ -23,13 +23,13 @@ open class PutFishUseCaseImpl(
 
     private val webClient = WebClient.create()
 
-    override fun runCase(userName: String, fishId: Long): Mono<Long> {
+    override fun runCase(userName: String, fishId: Long): Mono<String> {
         return fishService.checkFishOwner(fishId, userName)
             .filter { it }
             .flatMap {
                 requestCoreObjOut(fishId)
                     .map {
-                        it.data as Long
+                        (it.data as Long).toString()
                     }
             }
     }

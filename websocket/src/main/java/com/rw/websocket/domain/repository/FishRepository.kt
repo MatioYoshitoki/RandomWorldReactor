@@ -38,7 +38,7 @@ open class FishRepositoryImpl(
             }
             .map {
                 FishDetails(
-                    it["id"]!!.toLong(),
+                    it["id"]!!.toString(),
                     it["name"]!!.toString(),
                     it["hasMaster"]!!.toBoolean(),
                     it["weight"]!!.toInt(),
