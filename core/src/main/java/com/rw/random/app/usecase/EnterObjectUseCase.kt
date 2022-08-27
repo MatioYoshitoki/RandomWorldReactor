@@ -48,6 +48,7 @@ open class EnterObjectUseCaseImpl(
     }
 
     private fun randomFish(name: String, masterId: Long?): Fish {
+        val personalityIdx = RandomUtil.randomInt(1, 196)
         return Fish(
             snowflake.nextId(),
             name,
@@ -56,7 +57,7 @@ open class EnterObjectUseCaseImpl(
             taskProperties = taskProperties,
             sound = worldMessageDispatchHandler.worldChannel,
             taskChannel = taskHandler.taskHandler,
-            personality = RWPersonality.random(RandomUtil.randomInt(1, 196))
+            personality = RWPersonality.random(personalityIdx, applicationProperties.personalityName[personalityIdx - 1])
         )
     }
 }

@@ -11,6 +11,7 @@ import kotlin.streams.toList
 
 open class RWPersonality(
     val personality: Int,
+    val personalityName: String,
     val originRandomRate: Int = RandomUtil.randomInt(randomRange)
 ) {
 
@@ -235,7 +236,7 @@ open class RWPersonality(
 
     companion object {
         private const val randomRange = 1500
-        fun random(personalityType: Int): RWPersonality {
+        fun random(personalityType: Int, personalityName: String): RWPersonality {
             //1 AUED 1+2+
             //2 AUSD 1+
             //3 EUAD 1-2-
@@ -250,7 +251,7 @@ open class RWPersonality(
             } else {
                 personalityType
             }
-            return RWPersonality(tmp)
+            return RWPersonality(tmp, personalityName)
         }
 
         private fun position(personality: Int): Tuple3<Int, Int, Int> {

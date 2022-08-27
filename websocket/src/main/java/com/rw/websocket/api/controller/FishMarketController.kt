@@ -24,7 +24,7 @@ open class FishMarketController(
 
     @GetMapping("/list")
     fun fishMarketList(
-        @RequestBody pageRequest: FishSellListRequest
+        pageRequest: FishSellListRequest
     ): Mono<RWResult<List<FishSellLog>>> {
         // TODO 鱼市列表
         return viewFishMarketUseCase.runCase(

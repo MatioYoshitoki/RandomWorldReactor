@@ -7,6 +7,7 @@ import java.util.*;
 @ConfigurationProperties("random-world")
 public class ApplicationProperties {
 
+    private List<String> personalityName;
     private Integer eventChannelSize = 2048;
     private Integer taskChannelSize = 1024;
     private Long workId = 1L;
@@ -91,6 +92,14 @@ public class ApplicationProperties {
 
     public void setEventChannelSize(Integer eventChannelSize) {
         this.eventChannelSize = eventChannelSize;
+    }
+
+    public List<String> getPersonalityName() {
+        return personalityName;
+    }
+
+    public void setPersonalityName(List<String> personalityName) {
+        this.personalityName = personalityName;
     }
 
     public static class ObjectInitProperties {

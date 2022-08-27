@@ -82,7 +82,7 @@ open class UserController(
 //            .thenReturn(RWResult.success("成功", null))
 //    }
 
-    @PostMapping("/signIn")
+    @PostMapping("/sign_in")
     fun signIn(@AuthenticationPrincipal principal: Mono<UserDetails>): Mono<RWResult<Boolean>> {
         // 签到
         return principal
