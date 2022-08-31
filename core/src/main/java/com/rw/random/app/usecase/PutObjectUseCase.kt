@@ -1,10 +1,14 @@
 package com.rw.random.app.usecase
 
+import com.rw.random.common.constants.BeingStatus
+import com.rw.random.common.exception.PutObjectFailedException
 import com.rw.random.domain.entity.RWZone
 import com.rw.random.domain.service.PersistenceService
 import com.rw.random.domain.service.UserFishService
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
+import reactor.core.scheduler.Schedulers
+import java.time.Month
 
 interface PutObjectUseCase {
 
@@ -23,8 +27,21 @@ open class PutObjectUseCaseImpl(
         return persistenceService.loadFish(fishId)
             .filter { it.isSleep() }
             .filterWhen { userFishService.changeFishStatusToAlive(it) }
-            .doOnNext { zone.enterZone(it) }
-            .map { fishId }
+            .map {
+                it.status = BeingStatus.ALIVE
+                it
+            }
+            .publishOn(Schedulers.boundedElastic())
+            .flatMap {
+                if (!zone.enterZone(it)) {
+                    userFishService.changeFishStatusToSleep(it)
+                        .flatMap {
+                            Mono.error(PutObjectFailedException())
+                        }
+                } else {
+                    Mono.just(it.id)
+                }
+            }
     }
 
 }

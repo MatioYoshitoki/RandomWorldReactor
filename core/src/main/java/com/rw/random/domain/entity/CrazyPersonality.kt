@@ -3,7 +3,7 @@ package com.rw.random.domain.entity
 import java.util.*
 import kotlin.reflect.KClass
 
-class CrazyPersonality : RWPersonality(999999, 0) {
+class CrazyPersonality : RWPersonality(999999, "疯狂", 0 ) {
     init {
         val crazyPersonal = sortedMapOf(
             9500 to ATKTask::class,

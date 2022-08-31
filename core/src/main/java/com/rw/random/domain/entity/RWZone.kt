@@ -48,7 +48,7 @@ open class SimpleZone(
 ) : RWZone(zoneId, zoneName, money = money, moneyIncrSpeed = moneyIncrSpeed, maxObjSize = maxObjSize) {
 
     override fun enterZone(obj: RWObject): Boolean {
-        if (objSet.size >= maxObjSize) {
+        if (objSet.size >= maxObjSize && !obj.hasMaster) {
             return false
         }
         obj.topic = this.getZoneTopic()

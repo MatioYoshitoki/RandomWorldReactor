@@ -65,13 +65,14 @@ open class HelloWorldUseCaseImpl(
             return
         }
         val randomLength = RandomUtil.randomInt(2, 4)
+        val randomPersonalityIdx = RandomUtil.randomInt(1, 196)
         val fish = Fish(
             snowflake.nextId(),
             RandomName.randomName(true, randomLength),
             taskProperties = taskProperties,
             sound = worldMessageDispatchHandler.worldChannel,
             taskChannel = taskHandler.taskHandler,
-            personality = RWPersonality.random(RandomUtil.randomInt(1, 196))
+            personality = RWPersonality.random(randomPersonalityIdx, applicationProperties.personalityName[randomPersonalityIdx])
         )
         zone.enterZone(fish)
     }

@@ -1,9 +1,9 @@
 package com.rw.websocket.app.service
 
 import cn.hutool.core.date.DatePattern
-import com.rw.random.common.constants.BeingStatus
 import com.rw.random.common.entity.UserFish
 import com.rw.websocket.domain.entity.User
+import com.rw.websocket.domain.entity.UserProperty
 import com.rw.websocket.domain.entity.UserWithProperty
 import com.rw.websocket.domain.repository.FishRepository
 import com.rw.websocket.domain.repository.UserFishRepository
@@ -13,12 +13,11 @@ import com.rw.websocket.domain.repository.redis.AccessTokenUserRepository
 import com.rw.websocket.domain.repository.redis.UserAccessTokenRepository
 import com.rw.websocket.domain.repository.redis.UserInfoRepository
 import com.rw.websocket.domain.repository.redis.UserSignInRepository
-import com.rw.websocket.infre.exception.RegisterException
-import com.rw.websocket.infre.utils.FishWeight2ExpUtil.exchangeWeight2Exp
+import com.rw.websocket.infra.exception.RegisterException
+import com.rw.websocket.infra.utils.FishWeight2ExpUtil.exchangeWeight2Exp
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import reactor.core.publisher.switchIfEmpty
 import java.lang.Long.max
 import java.util.*
 
@@ -34,7 +33,7 @@ interface UserService {
 
     fun getUserByUserName(userName: String): Mono<User>
 
-    fun newUser(userName: String, password: String): Mono<Void>
+    fun newUser(userName: String, password: String): Mono<UserProperty>
 
     fun getAllFish(userId: Long): Flux<UserFish>
 
@@ -109,7 +108,7 @@ open class UserServiceImpl(
         return userRepository.findOneByUserName(userName)
     }
 
-    override fun newUser(userName: String, password: String): Mono<Void> {
+    override fun newUser(userName: String, password: String): Mono<UserProperty> {
         return userNameExist(userName)
             .flatMap { exist ->
                 if (exist) {
@@ -125,7 +124,6 @@ open class UserServiceImpl(
                 userPropertyRepository.addOne(it.id)
             }
             .switchIfEmpty(Mono.error(RegisterException("用户名被占用")))
-            .then()
     }
 
     override fun getAllFish(userId: Long): Flux<UserFish> {

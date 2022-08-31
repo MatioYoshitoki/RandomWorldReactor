@@ -19,8 +19,8 @@ abstract class RWObject(
     var hasMaster: Boolean = false,
     var masterId: Long? = null,
     val taskProperties: TaskProperties,
-    private val sound: Sinks.Many<RWEvent>?,
-    private val taskChannel: Sinks.Many<RWTask>?,
+    protected var sound: Sinks.Many<RWEvent>?,
+    protected var taskChannel: Sinks.Many<RWTask>?,
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -40,7 +40,7 @@ abstract class RWObject(
     fun sendMsg(event: RWEvent) {
         if (sound != null) {
             try {
-                SinksUtils.tryEmit(sound, event, 20)
+                SinksUtils.tryEmit(sound!!, event, 20)
             } catch (e: Exception) {
                 log.error("send msg failed!", e)
             }
@@ -50,7 +50,7 @@ abstract class RWObject(
     fun pushTask(task: RWTask) {
         if (taskChannel != null) {
             try {
-                SinksUtils.tryEmit(taskChannel, task, 20)
+                SinksUtils.tryEmit(taskChannel!!, task, 20)
             } catch (e: Exception) {
                 log.error("push task failed!", e)
             }

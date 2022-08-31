@@ -15,7 +15,7 @@ interface UserFishRepository {
 
     fun deleteOne(fishId: Long): Mono<Boolean>
 
-    fun updateStatus(fishId: Long, status: BeingStatus): Mono<Void>
+    fun updateStatus(fishId: Long, status: BeingStatus): Mono<Int>
 
 }
 
@@ -32,9 +32,9 @@ open class UserFishRepositoryImpl(
             .defaultIfEmpty(false)
     }
 
-    override fun updateStatus(fishId: Long, status: BeingStatus): Mono<Void> {
+    override fun updateStatus(fishId: Long, status: BeingStatus): Mono<Int> {
         return entityTemplate.update(
             Query.query(where("fish_id").`is`(fishId)), Update.update("fish_status", status.ordinal), UserFish::class.java
-        ).then()
+        )
     }
 }

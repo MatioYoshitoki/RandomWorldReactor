@@ -24,8 +24,8 @@ open class Fish(
     val dodge: Int = 5, // max 100
     money: Long = (Math.random() * 200).toLong(),
     taskProperties: TaskProperties,
-    sound: Sinks.Many<RWEvent>?,
-    taskChannel: Sinks.Many<RWTask>?,
+    sound: Sinks.Many<RWEvent>? = null,
+    taskChannel: Sinks.Many<RWTask>? = null,
     status: BeingStatus = BeingStatus.ALIVE,
     val personality: RWPersonality,
 ) : Being(id, name, hasMaster, masterId, heal, atk, taskProperties, sound, taskChannel, earnSpeed, money, status) {
@@ -153,6 +153,11 @@ open class Fish(
             log.info("${this.name} 受到【${event.source.name}】攻击, 生命值减少${damage}。剩余生命值: ${this.heal}")
         }
 
+    }
+
+    fun linkTheWorld(sound: Sinks.Many<RWEvent>, taskChannel: Sinks.Many<RWTask>) {
+        this.sound = sound
+        this.taskChannel = taskChannel
     }
 
     fun title(): String {

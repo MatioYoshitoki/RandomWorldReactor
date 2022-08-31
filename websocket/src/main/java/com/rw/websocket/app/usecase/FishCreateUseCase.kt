@@ -2,10 +2,9 @@ package com.rw.websocket.app.usecase
 
 import com.rw.random.common.dto.RWResult
 import com.rw.websocket.app.service.UserService
-import com.rw.websocket.domain.repository.FishRepository
 import com.rw.websocket.domain.service.MoneyChangeService
-import com.rw.websocket.infre.config.ApplicationProperties
-import com.rw.websocket.infre.exception.EnterFishException
+import com.rw.websocket.infra.config.ApplicationProperties
+import com.rw.websocket.infra.exception.EnterFishException
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Mono

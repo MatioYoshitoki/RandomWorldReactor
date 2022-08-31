@@ -7,8 +7,8 @@ import com.rw.websocket.domain.entity.FishSellLog
 import com.rw.websocket.domain.entity.UserWithProperty
 import com.rw.websocket.domain.service.MoneyChangeService
 import com.rw.websocket.domain.service.NormalLockService
-import com.rw.websocket.infre.exception.FishLimitedException
-import com.rw.websocket.infre.exception.NotEnoughMoneyException
+import com.rw.websocket.infra.exception.FishLimitedException
+import com.rw.websocket.infra.exception.NotEnoughMoneyException
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 import reactor.core.publisher.switchIfEmpty

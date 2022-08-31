@@ -25,7 +25,7 @@ open class UserPropertyRepositoryImpl(
     private val entityTemplate: R2dbcEntityTemplate
 ) : UserPropertyRepository {
     override fun addOne(userId: Long): Mono<UserProperty> {
-        return entityTemplate.insert(UserProperty(id = userId))
+        return entityTemplate.insert(UserProperty(id = userId, fishMaxCount = 1, money = 5000))
     }
 
     override fun findOne(userId: Long): Mono<UserProperty> {

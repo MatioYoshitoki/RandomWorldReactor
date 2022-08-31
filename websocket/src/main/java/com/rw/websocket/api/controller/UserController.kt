@@ -7,6 +7,7 @@ import com.rw.websocket.app.usecase.RegisterUseCase
 import com.rw.websocket.app.usecase.SignInUseCase
 import com.rw.websocket.domain.dto.request.LoginRequest
 import com.rw.websocket.domain.dto.request.RegisterRequest
+import com.rw.websocket.domain.entity.UserProperty
 import com.rw.websocket.domain.entity.UserWithProperty
 import org.slf4j.LoggerFactory
 import org.springframework.security.authentication.ReactiveAuthenticationManager
@@ -32,7 +33,7 @@ open class UserController(
     private val log = LoggerFactory.getLogger(javaClass)
 
     @PostMapping("/register")
-    fun register(@RequestBody registerRequest: RegisterRequest): Mono<RWResult<Void>> {
+    fun register(@RequestBody registerRequest: RegisterRequest): Mono<RWResult<UserProperty>> {
         // TODO 注册
         return registerUseCase.runCase(registerRequest)
             .map {

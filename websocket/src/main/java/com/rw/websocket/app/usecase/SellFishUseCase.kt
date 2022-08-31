@@ -3,8 +3,8 @@ package com.rw.websocket.app.usecase
 import com.rw.random.common.constants.BeingStatus
 import com.rw.websocket.app.service.FishService
 import com.rw.websocket.app.service.UserService
-import com.rw.websocket.infre.exception.FishStatusException
-import com.rw.websocket.infre.exception.NotFishOwnerException
+import com.rw.websocket.infra.exception.FishStatusException
+import com.rw.websocket.infra.exception.NotFishOwnerException
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 

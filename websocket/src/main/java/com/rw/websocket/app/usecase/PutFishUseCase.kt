@@ -3,7 +3,7 @@ package com.rw.websocket.app.usecase
 import com.rw.random.common.dto.RWResult
 import com.rw.websocket.app.service.FishService
 import com.rw.websocket.domain.dto.request.FishRequest
-import com.rw.websocket.infre.config.ApplicationProperties
+import com.rw.websocket.infra.config.ApplicationProperties
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Mono

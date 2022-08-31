@@ -1,8 +1,11 @@
 package com.rw.random.domain.repository
 
 import com.rw.random.common.constants.BeingStatus
+import com.rw.random.domain.entity.RWEvent
 import com.rw.random.domain.entity.RWPersonality
+import com.rw.random.domain.entity.RWTask
 import com.rw.random.domain.entity.obj.Fish
+import com.rw.random.infra.config.ApplicationProperties
 import com.rw.random.infra.config.TaskProperties
 import com.rw.random.infra.handler.TaskHandler
 import com.rw.random.infra.handler.WorldMessageDispatchHandler
@@ -12,12 +15,15 @@ import org.springframework.data.redis.core.ScanOptions
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import reactor.core.publisher.Sinks
 
 interface FishRepository {
 
     fun findOne(fishId: Long): Mono<Fish>
 
     fun findAll(): Flux<Fish>
+
+    fun updateFishStatus(fishId: Long, status: BeingStatus): Mono<Void>
 
     fun saveOne(fish: Fish): Mono<Void>
 
@@ -27,10 +33,9 @@ interface FishRepository {
 
 @Component
 open class FishRepositoryImpl(
+    private val applicationProperties: ApplicationProperties,
     private val redisTemplate: ReactiveStringRedisTemplate,
-    private val taskProperties: TaskProperties,
-    private val worldMessageDispatchHandler: WorldMessageDispatchHandler,
-    private val taskHandler: TaskHandler
+    private val taskProperties: TaskProperties
 ) : FishRepository {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -75,6 +80,12 @@ open class FishRepositoryImpl(
             }
     }
 
+    override fun updateFishStatus(fishId: Long, status: BeingStatus): Mono<Void> {
+        return redisTemplate.opsForHash<String, String>()
+            .put(getKey(fishId), "status", status.name)
+            .then()
+    }
+
     override fun saveOne(fish: Fish): Mono<Void> {
         return Mono.just(fish)
             .map {
@@ -114,6 +125,7 @@ open class FishRepositoryImpl(
     }
 
     private fun convertToFish(map: Map<String, String>): Fish {
+        val personalityIdx = map["personalityId"]!!.toInt()
         return Fish(
             map["id"]!!.toLong(),
             map["name"]!!.toString(),
@@ -129,10 +141,8 @@ open class FishRepositoryImpl(
             map["dodge"]!!.toInt(),
             map["money"]!!.toLong(),
             taskProperties,
-            worldMessageDispatchHandler.worldChannel,
-            taskHandler.taskHandler,
-            BeingStatus.valueOf(map["status"]!!),
-            RWPersonality(map["personalityId"]!!.toInt(), map["personalityRandomRate"]!!.toInt())
+            status = BeingStatus.valueOf(map["status"]!!),
+            personality = RWPersonality(personalityIdx, applicationProperties.personalityName[personalityIdx], map["personalityRandomRate"]!!.toInt())
         )
     }
 

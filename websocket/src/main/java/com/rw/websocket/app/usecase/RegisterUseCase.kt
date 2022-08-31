@@ -2,14 +2,15 @@ package com.rw.websocket.app.usecase
 
 import com.rw.websocket.app.service.UserService
 import com.rw.websocket.domain.dto.request.RegisterRequest
-import com.rw.websocket.infre.exception.RegisterException
+import com.rw.websocket.domain.entity.UserProperty
+import com.rw.websocket.infra.exception.RegisterException
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 
 interface RegisterUseCase {
 
-    fun runCase(request: RegisterRequest): Mono<Void>
+    fun runCase(request: RegisterRequest): Mono<UserProperty>
 
 }
 
@@ -18,7 +19,7 @@ open class RegisterUseCaseImpl(
     private val userService: UserService,
     private val passwordEncoder: PasswordEncoder
 ) : RegisterUseCase {
-    override fun runCase(request: RegisterRequest): Mono<Void> {
+    override fun runCase(request: RegisterRequest): Mono<UserProperty> {
         return Mono.just(request)
             .flatMap {
                 if (it.password != it.passwordAgain) {
