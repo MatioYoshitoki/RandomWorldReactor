@@ -9,6 +9,7 @@ class FishDetails(
     var id: String,
     var name: String,
     var hasMaster: Boolean,
+    var masterId: Long?,
     var weight: Int,
     var maxHeal: Int,
     var heal: Int,
@@ -20,6 +21,7 @@ class FishDetails(
     var money: Int,
     var status: BeingStatus,
     val personality: Int,
+    val personalityName: String,
 ) {
     companion object {
         val KEYS =
@@ -29,6 +31,8 @@ class FishDetails(
                 "weight",
                 "maxHeal",
                 "heal",
+                "hasMaster",
+                "masterId",
                 "recoverSpeed",
                 "atk",
                 "def",

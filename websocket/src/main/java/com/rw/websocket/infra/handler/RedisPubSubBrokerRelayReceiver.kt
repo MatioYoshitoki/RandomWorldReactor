@@ -4,10 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.rw.random.common.constants.RedisKeyConstants
 import com.rw.random.common.dto.RedisStreamMessage
 import com.rw.websocket.domain.repository.UserFishRepository
+import com.rw.websocket.infra.event.MessageSendEvent
+import com.rw.websocket.infra.event.MessageSendEventPayload
 import com.rw.websocket.infra.session.DefaultRandomWorldSessionManager
 import com.rw.websocket.infra.subscription.SubscriptionRegistry
 import com.rw.websocket.infra.utils.SimpleMessageUtils
 import org.slf4j.LoggerFactory
+import org.springframework.context.ApplicationEventPublisher
+import org.springframework.context.ApplicationEventPublisherAware
 import org.springframework.context.SmartLifecycle
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate
 import org.springframework.stereotype.Component
@@ -21,21 +25,23 @@ open class RedisPubSubBrokerRelayReceiver(
     private val subscriptionRegistry: SubscriptionRegistry,
     private val sessionManager: DefaultRandomWorldSessionManager,
     private val userFishRepository: UserFishRepository,
-) : SmartLifecycle {
+) : SmartLifecycle, ApplicationEventPublisherAware {
 
     private var isRunning = false
     private val log = LoggerFactory.getLogger(javaClass)
+    private lateinit var publisher: ApplicationEventPublisher
 
     @Suppress("UNCHECKED_CAST")
-    fun receive(): Flux<RedisStreamMessage> {
+    private fun receive(): Flux<String> {
         return redisTemplate.listenToChannel(
             RedisKeyConstants.REDIS_CHANNEL_KEY
         )
+            .map { it.message }
             .doOnNext {
-                log.trace("receive message from channel: ${it.message}")
+                log.trace("receive message from channel: $it")
             }
-            .map {
-                objectMapper.readValue(it.message, RedisStreamMessage::class.java)
+            .doOnNext{
+                publisher.publishEvent(MessageSendEvent(MessageSendEventPayload.of(it)))
             }
             .onErrorResume { err ->
                 log.error("Build message failed, err_msg={}, message={}", err.message, err)
@@ -80,48 +86,7 @@ open class RedisPubSubBrokerRelayReceiver(
 
     override fun start() {
         this.isRunning = true
-        receive()
-            .filter { SimpleMessageUtils.legalDestination(it.dest) }
-            .flatMap { msg ->
-                val dest = if (SimpleMessageUtils.isOwnerDestination(msg.dest!!)) {
-                    userFishRepository.findFishOwner(
-                        msg.dest!!.replace(SimpleMessageUtils.OWNER_DESTINATION_PREFIX, "").toLong()
-                    )
-                        .map {
-                            SimpleMessageUtils.buildUserDestination(it)
-                        }
-                } else {
-                    Mono.just(msg.dest!!)
-                }
-                dest
-                    .flatMapMany {
-                        Flux.fromIterable(subscriptionRegistry.getSubscriptions(it))
-                    }
-                    .flatMap {
-                        Mono.justOrEmpty(sessionManager.find(it.sessionId))
-                    }
-                    .map {
-                        it!!.webSocketSession
-                    }
-                    .flatMap {
-                        val sendMsg = it.textMessage(objectMapper.writeValueAsString(msg.payload!!))
-//                        log.info("send msg: {}", sendMsg.payloadAsText)
-                        if (it.isOpen) {
-                            it.send(Mono.just(sendMsg))
-                                .onErrorResume { err ->
-                                    log.error("SEND ERROR", err)
-                                    Mono.empty()
-                                }
-                        } else {
-                            Mono.empty()
-                        }
-                    }
-            }
-            .onErrorResume {
-                log.error("SEND ERROR", it)
-                Mono.empty()
-            }
-            .subscribe()
+        receive().subscribe()
     }
 
     override fun stop() {
@@ -130,5 +95,9 @@ open class RedisPubSubBrokerRelayReceiver(
 
     override fun isRunning(): Boolean {
         return isRunning
+    }
+
+    override fun setApplicationEventPublisher(applicationEventPublisher: ApplicationEventPublisher) {
+        this.publisher = applicationEventPublisher
     }
 }

@@ -189,7 +189,7 @@ open class Fish(
 //        status: BeingStatus = BeingStatus.ALIVE,
 //        val personality: RWPersonality,
         return """
-            {"id": $id, "name": "$name", "has_master": $hasMaster, "master_id": $masterId, "weight": $weight, "max_heal": $maxHeal, "heal": $heal, "recover_speed": $recoverSpeed, "atk": $atk, "def": $def, "earn_speed": $earnSpeed, "dodge": $dodge, "money": $money, "status": "${status.name}", "personality": ${personality.personality}}
+            {"id": $id, "name": "$name", "has_master": $hasMaster, "master_id": $masterId, "weight": $weight, "max_heal": $maxHeal, "heal": $heal, "recover_speed": $recoverSpeed, "atk": $atk, "def": $def, "earn_speed": $earnSpeed, "dodge": $dodge, "money": $money, "status": "${status.name}", "personality": ${personality.personality}, "personality_name": "${personality.personalityName}"}
         """.trimIndent()
     }
 

@@ -2,6 +2,7 @@ package com.rw.websocket.domain.repository
 
 import com.rw.random.common.constants.BeingStatus
 import com.rw.websocket.domain.dto.request.FishDetails
+import com.rw.websocket.infra.config.ApplicationProperties
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
@@ -20,6 +21,7 @@ interface FishRepository {
 @Component
 open class FishRepositoryImpl(
     private val redisTemplate: ReactiveStringRedisTemplate,
+    private val applicationProperties: ApplicationProperties,
 ) : FishRepository {
     override fun findOne(fishId: Long): Mono<FishDetails> {
         return redisTemplate.opsForHash<String, String>()
@@ -41,6 +43,7 @@ open class FishRepositoryImpl(
                     it["id"]!!.toString(),
                     it["name"]!!.toString(),
                     it["hasMaster"]!!.toBoolean(),
+                    it["masterId"]!!.toLong(),
                     it["weight"]!!.toInt(),
                     it["maxHeal"]!!.toInt(),
                     it["heal"]!!.toInt(),
@@ -51,7 +54,8 @@ open class FishRepositoryImpl(
                     it["dodge"]!!.toInt(),
                     it["money"]!!.toInt(),
                     BeingStatus.valueOf(it["status"]!!),
-                    it["personalityId"]!!.toInt()
+                    it["personalityId"]!!.toInt(),
+                    applicationProperties.personalityName[it["personalityId"]!!.toInt()]
                 )
             }
     }

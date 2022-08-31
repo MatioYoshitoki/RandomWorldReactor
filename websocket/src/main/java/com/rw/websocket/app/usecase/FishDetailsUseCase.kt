@@ -29,7 +29,6 @@ open class FishDetailsUseCaseImpl(
                     }
                     .collectList()
             }
-            .defaultIfEmpty(listOf())
 
     }
 }

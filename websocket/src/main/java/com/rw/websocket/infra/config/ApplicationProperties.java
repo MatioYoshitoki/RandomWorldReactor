@@ -2,6 +2,9 @@ package com.rw.websocket.infra.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @ConfigurationProperties("random-world.websocket")
 public class ApplicationProperties {
 
@@ -10,6 +13,8 @@ public class ApplicationProperties {
     private String moneyName = "灵石";
     private Long workId = 1L;
     private Long centerId = 1L;
+
+    private List<String> personalityName = new ArrayList<>();
     private NettyProperties netty = new NettyProperties();
 
     public NettyProperties getNetty() {
@@ -58,6 +63,14 @@ public class ApplicationProperties {
 
     public void setMoneyName(String moneyName) {
         this.moneyName = moneyName;
+    }
+
+    public List<String> getPersonalityName() {
+        return personalityName;
+    }
+
+    public void setPersonalityName(List<String> personalityName) {
+        this.personalityName = personalityName;
     }
 
     public static class NettyProperties {

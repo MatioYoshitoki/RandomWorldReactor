@@ -38,18 +38,13 @@ open class PersistenceServiceImpl(
 
     override fun loadFish(fishId: Long): Mono<Fish> {
         return fishRepository.findOne(fishId)
-            .map {
-                it.linkTheWorld(worldMessageDispatchHandler.worldChannel, taskHandler.taskHandler)
-                it
-            }
-            .doOnNext {
-                log.info("load fish: $it")
-            }
+            .map { beAlive(it) }
     }
 
     override fun loadAllAliveFish(): Mono<Void> {
         return fishRepository.findAll()
             .filter { it.status == BeingStatus.ALIVE }
+            .map { beAlive(it) }
             .doOnNext { zone.enterZone(it) }
             .then()
     }
@@ -63,6 +58,11 @@ open class PersistenceServiceImpl(
                 fishRepository.deleteOne(it.id)
             }
             .then()
+    }
+
+    private fun beAlive(fish: Fish): Fish {
+        if (fish.isAlive()) fish.linkTheWorld(worldMessageDispatchHandler.worldChannel, taskHandler.taskHandler)
+        return fish
     }
 
 }

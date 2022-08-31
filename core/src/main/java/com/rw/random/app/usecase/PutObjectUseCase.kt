@@ -3,8 +3,11 @@ package com.rw.random.app.usecase
 import com.rw.random.common.constants.BeingStatus
 import com.rw.random.common.exception.PutObjectFailedException
 import com.rw.random.domain.entity.RWZone
+import com.rw.random.domain.entity.obj.Fish
 import com.rw.random.domain.service.PersistenceService
 import com.rw.random.domain.service.UserFishService
+import org.springframework.context.ApplicationEventPublisher
+import org.springframework.context.ApplicationEventPublisherAware
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 import reactor.core.scheduler.Schedulers
@@ -32,14 +35,14 @@ open class PutObjectUseCaseImpl(
                 it
             }
             .publishOn(Schedulers.boundedElastic())
-            .flatMap {
-                if (!zone.enterZone(it)) {
-                    userFishService.changeFishStatusToSleep(it)
+            .flatMap { fish ->
+                if (!zone.enterZone(fish)) {
+                    userFishService.changeFishStatusToSleep(fish)
                         .flatMap {
                             Mono.error(PutObjectFailedException())
                         }
                 } else {
-                    Mono.just(it.id)
+                    Mono.just(fish.id)
                 }
             }
     }
